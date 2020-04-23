@@ -1,0 +1,104 @@
+---
+title: "Lab: Covid-19 + Census Data"
+output: 
+  learnr::tutorial:
+  progressive: true
+  allow_skip: false
+runtime: shiny_prerendered
+---
+
+```{r setup, include = FALSE}
+if(!require(learnr)) {
+  install.packages("learnr")
+}
+library(learnr)
+
+if(!require(dplyr)) {
+  install.packages("dplyr")
+}
+library(dplyr)
+
+if(!require(rgdal)) {
+  install.packages("openintro")
+}
+library(rgdal)
+
+if(!require(viridis)) {
+  install.packages("openintro")
+}
+library(viridis)
+
+if(!require(shiny)) {
+  install.packages("shiny")
+}
+library(shiny)
+
+borough <- read.csv("data/data_summ_bor.csv")
+zcta <- read.csv("data/data_summ_zcta.csv")
+NYC_zips <- readOGR("Shape_Files/ZIP_CODE_040114.shp")
+
+knitr::opts_chunk$set(echo = FALSE)
+```  
+  
+```{r load_data}
+
+```
+  
+## The Data: A summary 
+In this lab, you will inspect and interact with some data that has been compiled for you. The datasets loaded here were compiled using census data, COVID19 data (downloaded from github), and shape files for NYC zip codes (for plotting). You can see how this data was downloaded and merged by watching this week's accompanying videos. There are three files loaded for you in this space: data by zip code (called "zcta"), data by borough (called "borough"), and a shape file for plotting maps of nyc zip codes (called "NYC_zips").  
+
+
+
+## Inspecting the data
+
+### Exercise: Print the first few rows
+
+Use the `head()` function or square brackets to inspect the first 5 rows of the `borough` and `zcta` datasets. 
+```{r inspect_data, exercise=TRUE, exercise.setup = 'load-data'}
+
+```
+
+```{r inspect_data-solution}
+head(borough, 5)
+head(zcta, 5)
+#or:
+borough[1:5,]
+zcta[1:5,]
+```
+   
+```{r 5row-quiz}
+quiz(
+  question("What is the median income in the Bronx?",
+    answer("36381"),
+    answer("59620"),
+    answer("46586"),
+    answer("27074", correct = TRUE)
+  )
+)
+
+```  
+
+### Exercise: Inspect the structure of the data    
+
+Try using the `str()` function below to look at the structure of the borough-level data.  
+
+```{r structure, exercise=TRUE, exercise.setup = 'load-data'}
+
+```
+
+```{r structure-solution}
+str(borough)
+```
+    
+```{r str-quiz}
+quiz(
+  question("How many variables are there in the dataset?",
+    answer("2"),
+    answer("10"),
+    answer("16", correct=TRUE),
+    answer("20")
+  )
+)
+
+```  
+
