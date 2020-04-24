@@ -208,8 +208,31 @@ sum(simvals>=57)/1000
 We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists.   
   
 ## Scatter Plots: Race/Income   
-We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the proportion of the population that is white and the positive case rate.  
-```{r}
-
+We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
+```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$White_Total/zcta$Population*100,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab="percent white", 
+     ylab="pos cases per 1000 ppl", 
+     pch=16)
 ```
-
+  
+Next, we do the same for positive case rate vs. income:  
+```{r scatter2, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$Med_Income,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab="median income", 
+     ylab="pos cases per 1000 ppl", 
+     pch=16)
+```
+  
+And finally, percent white vs. median income:  
+```{r scatter3, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$Med_Income,
+     zcta$White_Total/zcta$Population*100, 
+     xlab="median income", 
+     ylab="pos cases per 1000 ppl", 
+     pch=16)
+```  
+   
+   
