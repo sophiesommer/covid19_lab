@@ -180,6 +180,30 @@ propwhite2 <- propwhite2[-3,-4]
 propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
 colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
 propwhite2
-
 ```
+  
+We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with more non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?  
+Let's start with the value in the "low proportion white, high case rate category" (which is 57). We'll randomly reassign zip codes as "low proportion white" and "high proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:   
+```{r}
+numzips <- 38+57+57+37
+num_low_white <- num_low_case <- 38+57
+num_high_white <- num_high_case <- 57+37
+
+simdata <- data.frame(CaseRate_Lev = c(rep(1, num_low_case), rep(2, num_high_case)),
+                      White_Prop_Lev = c(rep(1, num_low_white), rep(2, num_high_white)))
+set.seed(333)
+simvals <- vector()
+for(i in 1:1000){
+  simdata$White_Prop_Lev <- sample(simdata$White_Prop_Lev)
+  simvals[i] <- table(simdata)[2,1]
+}
+
+hist(simvals)
+abline(v=57, lwd=2, col="blue")
+
+#proportion of simulated values greater than 57
+sum(simvals>=57)/1000
+```
+  
+We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists.  
 
