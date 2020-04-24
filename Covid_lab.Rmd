@@ -114,8 +114,8 @@ head(zcta$Population)
 head(zcta$TotalPop)
 ```
 
-## Cases by Race and Median Income 
-One way table of race, where race is defined as low percentage white, medium percentage white, and high percentage white (notice that case rates are higher in zip codes with a relatively low proportion of white people, and lower in zip codes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.    
+## 1 and 2-way Tables: Race/Income  
+First, let's make a one way table of race, where race is defined as low, medium, and high proportion white (notice that case rates are higher in zip codes with a relatively low proportion of white people, and lower in zip codes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.    
 ```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite <- zcta %>% 
   mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
@@ -167,7 +167,7 @@ inc_propwhite
 ```
   
 For a moment, let's come back to the one-way table of the proportion of the population that is white. Here is another way we could have constructed that one-way table for race (this version is really a two-way table of race and case rate). The code below does the following: First, we divide the zip codes into two equally sized groups based on the proportion of the population that is white (half the zip codes are classified as having a high proportion of white people, half are classified as having a low proportion of white people). Then, we do the same thing by case rate (half the zip codes are classified as having a high case rate and half are classified as having a low case rate). Finally, we construct a 2-way table of these new categorical variables, where the values in the table are counts of zip codes. For example, there are 38 zip codes that are classified as having a low case rate AND a low proportion of white people.     
-```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
+```{r oneway_race2, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite2 <- zcta %>% 
   mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
@@ -182,9 +182,9 @@ colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
 propwhite2
 ```
   
-We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with more non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?  
-Let's start with the value in the "low proportion white, high case rate category" (which is 57). We'll randomly reassign zip codes as "low proportion white" and "high proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:   
-```{r}
+We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?   
+Let's start with the value in the "low proportion white, high case rate category" (which is 57). We'll create a fake dataset that looks like the observed data (it would produce the same table as above), but then we will randomly reassign the levels of "proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:    
+```{r sim, exercise=TRUE, exercise.setup = 'load-data'}
 numzips <- 38+57+57+37
 num_low_white <- num_low_case <- 38+57
 num_high_white <- num_high_case <- 57+37
@@ -205,5 +205,11 @@ abline(v=57, lwd=2, col="blue")
 sum(simvals>=57)/1000
 ```
   
-We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists.  
+We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists.   
+  
+## Scatter Plots: Race/Income   
+We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the proportion of the population that is white and the positive case rate.  
+```{r}
+
+```
 
