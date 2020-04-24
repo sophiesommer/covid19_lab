@@ -33,6 +33,11 @@ if(!require(shiny)) {
 }
 library(shiny)
 
+if(!require(tidyr)) {
+  install.packages("tidyr")
+}
+library(tidyr)
+
 borough <- read.csv("data/data_summ_bor.csv")
 zcta <- read.csv("data/data_summ_zcta.csv")
 NYC_zips <- readOGR("Shape_Files/ZIP_CODE_040114.shp")
@@ -49,7 +54,7 @@ In this lab, you will inspect and interact with some data that has been compiled
 
 
 
-## Inspecting the data
+## Inspecting the data  
 
 ### Exercise: Print the first few rows
 
@@ -101,4 +106,51 @@ quiz(
 )
 
 ```  
+  
+## Cases by Race and Median Income 
+One way table of race, where race is defined as low percentage white, medium percentage white, and high percentage white:  
+```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
+propwhite <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  group_by(White_Prop_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
+propwhite <- propwhite[-4,]
+propwhite
+```
+
+```{r oneway_race-solution}
+
+```  
+  
+One way table of income, where income is defined as low income, medium income, and high income:  
+```{r oneway_inc, exercise=TRUE, exercise.setup = 'load-data'}
+inc <- zcta %>% 
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
+  group_by(Med_Inc_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
+inc <- inc[-4,]
+inc
+```
+
+```{r oneway_inc-solution}
+
+```
+
+Let's try to reproduce a 2-way table of race and income:  
+```{r twoway, exercise=TRUE, exercise.setup = 'load-data'}
+inc_propwhite <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
+  group_by(White_Prop_Lev, Med_Inc_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
+  spread(White_Prop_Lev, Cases_per_1000, fill=0)
+inc_propwhite <- inc_propwhite[-4,-5]
+inc_propwhite
+```
+
+```{r twoway-solution}
+
+```
 
