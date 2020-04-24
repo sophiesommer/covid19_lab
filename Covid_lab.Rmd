@@ -46,7 +46,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```  
   
 ```{r load_data}
-
+source("getShapeColors.R")
 ```
   
 ## The Data: A summary 
@@ -236,3 +236,68 @@ plot(zcta$Med_Income,
 ```  
    
    
+## Mapping: Race/Income    
+In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zip-code level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, one needs to determine the color of each zip code on the map. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
+```{r map1, exercise=TRUE, exercise.setup = 'load-data'}
+getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL){
+  if(length(nbreaks) == 1) {
+    mybreaks <- c(-1, quantile(data,
+                               probs = seq(0, 1, length.out=nbreaks+1),
+                               na.rm = T))
+  } else {
+    mybreaks <- c(-1,nbreaks)
+  }
+  if(!is.null(mycolors)){
+    mycols <- mycolors
+  } else {
+    mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
+                  seq(0.05,0.65, length.out = length(mybreaks)-1))
+  }
+  mycols[1] <- missingcol
+  data[is.na(data)] <- -.1
+  mycolorscheme <- cut(data, mybreaks) %>%
+    as.numeric()
+  mycolorscheme <- mycols[mycolorscheme]
+  levs <- levels(cut(data, mybreaks))
+  levs[1] <- "No Data"
+  return(list(mycolorscheme, levs, mycols))
+}
+``` 
+  
+Let's first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we'll divide the case rates into quintiles in order to match the map published by the Furman Center.   
+```{r map2, exercise=TRUE, exercise.setup = 'load-data'}
+col_lev <- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                          5, 
+                          "white", 
+                          mycolors=viridis(6))
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = "Positive Tests Per 1000 People by Zip Code", 
+     cex = 10, lwd=0.01)
+
+legend("topleft", 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = "Positive Tests per 1000 People")
+```   
+
+  
+Next, we could plot the same map but change the colors so that they reflect the proportion of the population that is non-white.  
+```{r map3, exercise=TRUE, exercise.setup = 'load-data'}
+col_lev <- getShapeColors(round((1-zcta$White_Total/zcta$Population)*100,1), 
+                          5, 
+                          "white", 
+                          mycolors=viridis(6))
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = "Percent of Population that is Non-White", 
+     cex = 10, lwd=0.01)
+
+legend("topleft", 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = "% Non-White")
+```    
+  
