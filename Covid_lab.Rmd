@@ -115,36 +115,39 @@ head(zcta$TotalPop)
 ```
 
 ## Cases by Race and Median Income 
-One way table of race, where race is defined as low percentage white, medium percentage white, and high percentage white:  
+One way table of race, where race is defined as low percentage white, medium percentage white, and high percentage white (notice that case rates are higher in zip codes with a relatively low proportion of white people, and lower in zip codes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.    
 ```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite <- zcta %>% 
   mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
   group_by(White_Prop_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
-propwhite <- propwhite[-4,]
+propwhite <- propwhite[-nrow(propwhite),]
 propwhite
 ```
 
 ```{r oneway_race-solution}
-
+propwhite <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
+  group_by(White_Prop_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
+propwhite <- propwhite[-nrow(propwhite),]
+propwhite
 ```  
   
-One way table of income, where income is defined as low income, medium income, and high income:  
+One way table of income, where income is defined as low income, medium income, and high income. (Notice that case rates are higher in zip codes with a relatively low median income, and lower in zip codes with a relatively high median income):  
 ```{r oneway_inc, exercise=TRUE, exercise.setup = 'load-data'}
 inc <- zcta %>% 
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(Med_Inc_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
-inc <- inc[-4,]
+inc <- inc[-nrow(inc),]
 inc
 ```
+  
 
-```{r oneway_inc-solution}
-
-```
-
-Let's try to reproduce a 2-way table of race and income:  
+Let's try to reproduce a 2-way table of race and income. We notice something kind of interesting. It seems like case rates don't vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.    
 ```{r twoway, exercise=TRUE, exercise.setup = 'load-data'}
 inc_propwhite <- zcta %>% 
   mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
@@ -153,11 +156,30 @@ inc_propwhite <- zcta %>%
   group_by(White_Prop_Lev, Med_Inc_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
   spread(White_Prop_Lev, Cases_per_1000, fill=0)
-inc_propwhite <- inc_propwhite[-4,-5]
+inc_propwhite <- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
+inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
+colnames(inc_propwhite) <- c(NA, "Low Prop White", "Med Prop White", "High Prop White")
 inc_propwhite
 ```
 
 ```{r twoway-solution}
+
+```
+  
+For a moment, let's come back to the one-way table of the proportion of the population that is white. Here is another way we could have constructed that one-way table for race (this version is really a two-way table of race and case rate). The code below does the following: First, we divide the zip codes into two equally sized groups based on the proportion of the population that is white (half the zip codes are classified as having a high proportion of white people, half are classified as having a low proportion of white people). Then, we do the same thing by case rate (half the zip codes are classified as having a high case rate and half are classified as having a low case rate). Finally, we construct a 2-way table of these new categorical variables, where the values in the table are counts of zip codes. For example, there are 38 zip codes that are classified as having a low case rate AND a low proportion of white people.     
+```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
+propwhite2 <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %>%
+  group_by(White_Prop_Lev, CaseRate_Lev) %>%
+  summarise(N_Zips = n()) %>%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 <- propwhite2[-3,-4]
+propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
+colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
+propwhite2
 
 ```
 
