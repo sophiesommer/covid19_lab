@@ -85,7 +85,7 @@ quiz(
 
 ### Exercise: Inspect the structure of the data    
 
-Try using the `str()` function below to look at the structure of the borough-level data.  
+Try using the `str()` function below to look at the structure of each dataset.  
 
 ```{r structure, exercise=TRUE, exercise.setup = 'load-data'}
 
@@ -93,20 +93,27 @@ Try using the `str()` function below to look at the structure of the borough-lev
 
 ```{r structure-solution}
 str(borough)
+str(zcta)
 ```
-    
-```{r str-quiz}
-quiz(
-  question("How many variables are there in the dataset?",
-    answer("2"),
-    answer("10"),
-    answer("16", correct=TRUE),
-    answer("20")
-  )
-)
-
-```  
+     
+At this point, it might be useful to also inspect some of the variables more carefully to make sure we understand what they are. For now, let's focus on the zip-code level data. Looking at the data structure, we note that the second three variables are called "Positive," "Total," and "zcta_cum.perc_pos". "Positive" gives the number of positive tests by zipcode, "Total" gives the number of total tests by zipcode, and now we will show below that zcta_cum.perc_pos is just the percentage of total tests that were positive (i.e., Positive/Total*100, rounded to two decimals):    
+```{r postotal, exercise=TRUE, exercise.setup = 'load-data'}
+head(round(zcta$Positive/zcta$Total*100,2))
+head(zcta$zcta_cum.perc_pos)
+```
   
+Another useful gut check: the census data includes a "total" variable for most demographic variables. In this dataset, we have collected the reported values for "Race_Total".. But is this the same as the full population? Initially, we collected both variables because it was important to check whether the two values are equivalent. It was possible that race information wasn't collected for the entire population and that the total number of people included in the race counts could be different from the full population. However, upon further inspection, these variables actually have the same values:   
+```{r pop, exercise=TRUE, exercise.setup = 'load-data'}
+head(zcta$Race_Total)
+head(zcta$Population)
+```
+  
+That said, you might notice that there is another variable called TotalPop. This variable was imported as part of the group of variables related to education level. Note that the values in this column are different from the Race_Total and Population columns. Looking at the documentation provided by the Census, it turns out this is because education level is only recorded for people over the age of 25.  
+```{r pop2, exercise=TRUE, exercise.setup = 'load-data'}
+head(zcta$Population)
+head(zcta$TotalPop)
+```
+
 ## Cases by Race and Median Income 
 One way table of race, where race is defined as low percentage white, medium percentage white, and high percentage white:  
 ```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
