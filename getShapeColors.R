@@ -10,7 +10,7 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
     mycols <- mycolors
   } else {
     mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
-                  seq(0.05,0.65, length.out = length(mybreaks)-1))
+                  seq(0.05,0.55, length.out = length(mybreaks)-1))
   }
   mycols[1] <- missingcol
   data[is.na(data)] <- -.1

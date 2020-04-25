@@ -50,7 +50,7 @@ source("getShapeColors.R")
 ```
   
 ## The Data: A summary 
-In this lab, you will inspect and interact with some data that has been compiled for you. The datasets loaded here were compiled using census data, COVID19 data (downloaded from github), and shape files for NYC zip codes (for plotting). You can see how this data was downloaded and merged by watching this week's accompanying videos. There are three files loaded for you in this space: data by zip code (called "zcta"), data by borough (called "borough"), and a shape file for plotting maps of nyc zip codes (called "NYC_zips").  
+In this lab, you will inspect and interact with some data that has been compiled for you. The datasets loaded here were compiled using census data, COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how this data was downloaded and merged by reading the accompanying Rmds in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space: data by zip code (called "zcta"), data by borough (called "borough"), and a shape file for plotting maps of nyc zip codes (called "NYC_zips").   
 
 
 
@@ -182,7 +182,7 @@ colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
 propwhite2
 ```
   
-We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?   
+We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?     
 Let's start with the value in the "low proportion white, high case rate category" (which is 57). We'll create a fake dataset that looks like the observed data (it would produce the same table as above), but then we will randomly reassign the levels of "proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:    
 ```{r sim, exercise=TRUE, exercise.setup = 'load-data'}
 numzips <- 38+57+57+37
@@ -206,6 +206,38 @@ sum(simvals>=57)/1000
 ```
   
 We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists.   
+\newline  
+\newline  
+Another thing to take a look at: you may have noticed that we split case rate and proportion white into only two equally sized categories above. Here is the code again. See if you can change the code to split the zip codes into 3, or even 4 categories. Do you notice a different pattern?  
+```{r oneway_race3, exercise=TRUE, exercise.setup = 'load-data'}
+propwhite2 <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %>%
+  group_by(White_Prop_Lev, CaseRate_Lev) %>%
+  summarise(N_Zips = n()) %>%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 <- propwhite2[-3,-4]
+propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
+colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
+propwhite2
+```  
+  
+```{r oneway_race3-solution}
+propwhite2 <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 3)) %>%
+  group_by(White_Prop_Lev, CaseRate_Lev) %>%
+  summarise(N_Zips = n()) %>%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 <- propwhite2[-3,-4]
+propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
+colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
+propwhite2
+```
   
 ## Scatter Plots: Race/Income   
 We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
@@ -237,7 +269,7 @@ plot(zcta$Med_Income,
    
    
 ## Mapping: Race/Income    
-In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zip-code level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, one needs to determine the color of each zip code on the map. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
+In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zip-code level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data'}
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL){
   if(length(nbreaks) == 1) {
@@ -251,7 +283,7 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
     mycols <- mycolors
   } else {
     mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
-                  seq(0.05,0.65, length.out = length(mybreaks)-1))
+                  seq(0.05,0.55, length.out = length(mybreaks)-1))
   }
   mycols[1] <- missingcol
   data[is.na(data)] <- -.1
@@ -263,7 +295,7 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
   return(list(mycolorscheme, levs, mycols))
 }
 ``` 
-  
+   
 Let's first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we'll divide the case rates into quintiles in order to match the map published by the Furman Center.   
 ```{r map2, exercise=TRUE, exercise.setup = 'load-data'}
 col_lev <- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
@@ -301,3 +333,39 @@ legend("topleft",
        title = "% Non-White")
 ```    
   
+An open-ended question about trying to visualize these two things on a plot simultaneously: Suppose that we wanted to see how well the two maps above "line up" (without scrolling back and forth between them). Here's one way we might try to do that (although maybe there are better ways.. or maybe this is an ill-advised endeavor altogether): We can plot the case rate quintile as increasingly dark shades of transparant blue, and the proportion non-white as increasingly dark shades of transparant red. Finally, we can overlay the maps, one on top of the other. Then any zip code with similar levels of these two variables will appear purple, while zip codes with a high-level of one variable, but not the other, will appear red or blue.   
+```{r map4, exercise=TRUE, exercise.setup = 'load-data'}
+col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                           5, 
+                           rdgrbl = c(0,0,1))
+col_lev2 <- getShapeColors(round((1-zcta$White_Total/zcta$Population)*100,1), 
+                           5, 
+                           rdgrbl = c(1,0,0))
+
+par(mfrow=c(1,3))
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01)
+legend("topleft", 
+       legend = col_lev1[[2]], 
+       fill = col_lev1[[3]], 
+       cex = 0.8, 
+       title = "Pos Tests per 1000")
+
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01)
+legend("topleft", 
+       legend = col_lev2[[2]], 
+       fill = col_lev2[[3]], 
+       cex = 0.8, 
+       title = "% Non-White")
+
+
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01)
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01, add=T)
+```   
