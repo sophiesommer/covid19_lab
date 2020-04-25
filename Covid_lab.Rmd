@@ -271,7 +271,7 @@ plot(zcta$Med_Income,
 ## Mapping: Race/Income    
 In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zip-code level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data'}
-getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL){
+getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
   if(length(nbreaks) == 1) {
     mybreaks <- c(-1, quantile(data,
                                probs = seq(0, 1, length.out=nbreaks+1),
@@ -283,7 +283,7 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
     mycols <- mycolors
   } else {
     mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
-                  seq(0.05,0.55, length.out = length(mybreaks)-1))
+                  seq(0.05,max_opac, length.out = length(mybreaks)-1))
   }
   mycols[1] <- missingcol
   data[is.na(data)] <- -.1
@@ -369,3 +369,71 @@ plot(NYC_zips, col = col_lev1[[1]],
      main = "", 
      cex = 10, lwd=0.01, add=T)
 ```   
+  
+## Exploration Workspace  
+Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?  
+\newline  
+\newline  
+### Code to examine the data  
+```{r practice1, exercise=TRUE, exercise.setup = 'load-data'}
+str(zcta)  
+```   
+  
+### Code to construct a 1-way table   
+```{r practice2, exercise=TRUE, exercise.setup = 'load-data'}
+inc <- zcta %>% 
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
+  group_by(Med_Inc_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
+inc <- inc[-nrow(inc),]
+inc
+```  
+
+### Code to construct a 2-way table of case rates  
+```{r practice3, exercise=TRUE, exercise.setup = 'load-data'}
+inc_propwhite <- zcta %>% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
+  group_by(White_Prop_Lev, Med_Inc_Lev) %>%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
+  spread(White_Prop_Lev, Cases_per_1000, fill=0)
+inc_propwhite <- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
+inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
+colnames(inc_propwhite) <- c(NA, "Low Prop White", "Med Prop White", "High Prop White")
+inc_propwhite
+```    
+
+### Code to construct a scatter plot   
+```{r practice4, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$Med_Income,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab="median income", 
+     ylab="pos cases per 1000 ppl", 
+     pch=16)
+```    
+  
+### Code construct a map  
+```{r practice5, exercise=TRUE, exercise.setup = 'load-data'}
+col_lev <- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                          5, 
+                          "white", 
+                          rdgrbl = c(0,1,0),
+                          max_opac = 0.7)
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = "Positive Tests Per 1000 People by Zip Code", 
+     cex = 10, lwd=0.01)
+
+legend("topleft", 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = "Positive Tests per 1000 People")
+```
+   
+### Empty workspace for you!  
+
+```{r practice_blank, exercise=TRUE, exercise.setup = 'load-data'}
+
+```  
