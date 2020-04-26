@@ -1,5 +1,5 @@
 ---
-title: "Lab: Covid-19 + Census Data"
+title: "Lab: NYC + Covid-19 + Census Data"
 output: 
   learnr::tutorial:
   progressive: true
@@ -74,8 +74,11 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
   
 ## The Data: A summary 
-In this lab, you will inspect and interact with some data that has been compiled for you. The datasets loaded here were compiled using census data, COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how this data was downloaded and merged by reading the accompanying Rmds in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space: data by zip code (called "zcta"), data by borough (called "borough"), and a shape file for plotting maps of nyc zip codes (called "NYC_zips").   
+In this lab, you will inspect and interact with some datasets that habe been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
 
++ zcta - data by zip code (zipcode tabulation area),
++ borough - data by borough
++ NYC_zips - a shape file used only for plotting maps of nyc zip codes 
 
 
 ## Inspecting the data  
@@ -109,7 +112,7 @@ quiz(
 
 ### Exercise: Inspect the structure of the data    
 
-Try using the `str()` function below to look at the structure of each dataset.  
+Try using the `str()` function below to look at the structure of each dataset. The term "structure" refers to the organization of a data set, which can be more complicated than a simple table. For example, it could have variables nested in other variables. When the data are in a table, `str()` will tell you about the names and types of variables.
 
 ```{r structure, exercise=TRUE, exercise.setup = 'load-data'}
 
@@ -120,116 +123,162 @@ str(borough)
 str(zcta)
 ```
      
-At this point, it might be useful to also inspect some of the variables more carefully to make sure we understand what they are. For now, let's focus on the zip-code level data. Looking at the data structure, we note that the second three variables are called "Positive," "Total," and "zcta_cum.perc_pos". "Positive" gives the number of positive tests by zipcode, "Total" gives the number of total tests by zipcode, and now we will show below that zcta_cum.perc_pos is just the percentage of total tests that were positive (i.e., Positive/Total*100, rounded to two decimals):    
+At this point, it might be useful to also inspect some of the variables more carefully to make sure we understand what they are. For now, let's focus on the zipcode level data. Looking at the data structure, we note that the second three variables are called "Positive," "Total," and "zcta_cum.perc_pos". "Positive" gives the number of positive tests by zipcode, "Total" gives the number of total tests by zipcode. We can confirm below that zcta_cum.perc_pos is just the percentage of total tests that were positive (i.e., Positive/Total*100, rounded to two decimals):    
 ```{r postotal, exercise=TRUE, exercise.setup = 'load-data'}
 head(round(zcta$Positive/zcta$Total*100,2))
 head(zcta$zcta_cum.perc_pos)
 ```
   
-Another useful gut check: the census data includes a "total" variable for most demographic variables. In this dataset, we have collected the reported values for "Race_Total".. But is this the same as the full population? Initially, we collected both variables because it was important to check whether the two values are equivalent. It was possible that race information wasn't collected for the entire population and that the total number of people included in the race counts could be different from the full population. However, upon further inspection, these variables actually have the same values:   
+Another useful consistency check: the census data includes a "total" variable for most demographic variables (i.e., sex, age, income, race, education). In this dataset, we have collected the reported values for "Race_Total" (i.e., total of all race categories). Does this show the same number as the total population from the SEX BY AGE tables? Perhaps estimates based on race do not count everybody? Upon further inspection, these variables actually do have the same values:   
+
 ```{r pop, exercise=TRUE, exercise.setup = 'load-data'}
 head(zcta$Race_Total)
 head(zcta$Population)
 ```
   
-That said, you might notice that there is another variable called TotalPop. This variable was imported as part of the group of variables related to education level. Note that the values in this column are different from the Race_Total and Population columns. Looking at the documentation provided by the Census, it turns out this is because education level is only recorded for people over the age of 25.  
+That said, you might notice that there is another variable called TotalPop. This variable was imported as part of the group of variables related to educational attainment level, including Bachelors, Masters, Professional, and Doctorate degrees. 
+
 ```{r pop2, exercise=TRUE, exercise.setup = 'load-data'}
 head(zcta$Population)
 head(zcta$TotalPop)
 ```
 
-## 1 and 2-way Tables: Race/Income  
-First, let's make a one way table of race, where race is defined as low, medium, and high proportion white (notice that case rates are higher in zip codes with a relatively low proportion of white people, and lower in zip codes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.    
+Note that the values in this column are smaller than the Population (equals Race_Total) columns. Looking at the documentation provided by the Census for this group of variables, it turns out the variables we were examining (college education) are recorded only for people over the age of 25.  So the moral of the story is, don't always trust the names of the variables created by someone else (in this case, us)!
+
+
+## Tables by race and income  
+
+Race is a complex subject and, in fact, race has many categorizations in the ACS dataset. A simplifying step, if we are intersted in associations between race and COVID-19 outcomes, is to compare one category against all the others. You could choose any race (e.g., proportions of non-Hispanic Asian are in the column NH_Asian). But we will concentrate on total population white, since a lot of the conversation around racial disparities centers on the degree to which a white majority is associated with privilege. 
+
+Suppose, then, that we want to look at *racial composition* in terms of proportion white, and in particular, we want to discretize this racial composition variable into three groups: low, medium, and high proportion white. This is the kind of thing that happens in a lot of media reports.
+
+The code for this transformation looks a little complicated, but you should be able to follow the general idea. The `mutate` function is used to create new variables in an existing table (there are other ways to do this in R). The `ntile` function assigns each zipcode to one of our three groups based on rank-ordering (it is an implementation of cuts using **quantiles**), and the `group_by` and `summarize` functions agreggate the positive case rate over all of the zipcodes in the same group.
+
 ```{r oneway_race, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop = round(White_Total/Race_Total,2)) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
-  group_by(White_Prop_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
-propwhite <- propwhite[-nrow(propwhite),]
+  group_by(White_Prop_Lev) %>% 
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>% 
+  na.omit()
 propwhite
 ```
 
+
 ```{r oneway_race-solution}
 propwhite <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop = round(White_Total/Race_Total,2)) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
   group_by(White_Prop_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
-propwhite <- propwhite[-nrow(propwhite),]
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
+  na.omit()
 propwhite
 ```  
   
-One way table of income, where income is defined as low income, medium income, and high income. (Notice that case rates are higher in zip codes with a relatively low median income, and lower in zip codes with a relatively high median income):  
+Notice that case rates are higher in zipcodes with a relatively low proportion of white people, and lower in zipcodes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.    
+
+### Income
+
+We can similarly define a one-way table of zipcodes summarized by low income, medium income, and high income. (Notice that case rates are higher in zip codes with a relatively low median income, and lower in zip codes with a relatively high median income):  
 ```{r oneway_inc, exercise=TRUE, exercise.setup = 'load-data'}
 inc <- zcta %>% 
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(Med_Inc_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
-inc <- inc[-nrow(inc),]
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
+  na.omit()
 inc
 ```
   
+In the above examples of one-way tables, we take a single variable, such as proportion-white or median-income, and discretize that variable into levels. We then group the zipcodes (which are our data cases) by level, and display this COVID case-rate aggregated over the zipcodes in each level.
 
-Let's try to reproduce a 2-way table of race and income. We notice something kind of interesting. It seems like case rates don't vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.    
+Question: based on the code that we used, are we "weighing" each zipcode by its population, or are we weighing each zipcode equally?
+
+
+### Two variables at time
+
+Let's now try to reproduce a 2-way table, looking simultaneously at the variables of race and income. To make a two way table, of course we need to create the two groupings (proportion-white and median-income) as before. Now when we use the `group_by` function, we include both variables.
+
+We notice something kind of interesting. It seems like case rates don't vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.    
 ```{r twoway, exercise=TRUE, exercise.setup = 'load-data'}
 inc_propwhite <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  select(White_Total, Race_Total, Med_Income, Positive, Population) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(White_Prop_Lev, Med_Inc_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %>%
   spread(White_Prop_Lev, Cases_per_1000, fill=0)
-inc_propwhite <- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
+
 inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
-colnames(inc_propwhite) <- c(NA, "Low Prop White", "Med Prop White", "High Prop White")
+colnames(inc_propwhite) <- c("inc/race","Low Prop White", "Med Prop White", "High Prop White")
 inc_propwhite
 ```
+
 
 ```{r twoway-solution}
 
 ```
+
+### Slicing the same data differently
   
-For a moment, let's come back to the one-way table of the proportion of the population that is white. Here is another way we could have constructed that one-way table for race (this version is really a two-way table of race and case rate). The code below does the following: First, we divide the zip codes into two equally sized groups based on the proportion of the population that is white (half the zip codes are classified as having a high proportion of white people, half are classified as having a low proportion of white people). Then, we do the same thing by case rate (half the zip codes are classified as having a high case rate and half are classified as having a low case rate). Finally, we construct a 2-way table of these new categorical variables, where the values in the table are counts of zip codes. For example, there are 38 zip codes that are classified as having a low case rate AND a low proportion of white people.     
+For a moment, let's come back to the one-way table of the proportion of the population that is white. The point of that tabulation was to explore whether there was a relationship between race composition and COVID-19 incidence. 
+
+Here is another way we could have conducted that analysis. In this version, we make a two-way table of race and case rate. That is, we also discretize case rate as, for example, low and high. In the cells of this table, we will count how many of the roughly 200 zipcodes fit the joint categories.
+
+The code below does the following: First, we divide the zip codes into two equally sized groups based on the proportion of the population that is white. This is also called a median-split. Half of the zip codes are classified as being high proportion white, and half are classified as low proportion white Then, we do the same thing by case rate. Half of the zip codes are classified as having a high case rate and half are classified as having a low case rate. Finally, we construct a 2-way table of these new categorical variables, where the values in the table are counts of zip codes. For example, there are 38 zip codes that are classified as having a low case rate AND a low proportion of white people.    
+
 ```{r oneway_race2, exercise=TRUE, exercise.setup = 'load-data'}
-propwhite2 <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
-  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
-  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
-  mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %>%
-  group_by(White_Prop_Lev, CaseRate_Lev) %>%
-  summarise(N_Zips = n()) %>%
-  spread(White_Prop_Lev, N_Zips, fill=0)
-propwhite2 <- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
-propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
-colnames(propwhite2) <- c(NA, "Low Prop White", "High Prop White")
-propwhite2
+
+propwhite_take2 <- zcta %>% 
+  transmute(White_Prop = round(White_Total/Race_Total*100, 2),
+         Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
+  na.omit() %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2),
+         CaseRate_Lev = ntile(Cases_per_1000, 2)) %>%
+  select(White_Prop_Lev, CaseRate_Lev) %>%
+  table()
+propwhite_take2
 ```
   
-We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?     
-Let's start with the value in the "low proportion white, high case rate category" (which is 57). We'll create a fake dataset that looks like the observed data (it would produce the same table as above), but then we will randomly reassign the levels of "proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:    
-```{r sim, exercise=TRUE, exercise.setup = 'load-data'}
-numzips <- 38+57+57+37
-num_low_white <- num_low_case <- 38+57
-num_high_white <- num_high_case <- 57+37
+We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?
 
-simdata <- data.frame(CaseRate_Lev = c(rep(1, num_low_case), rep(2, num_high_case)),
-                      White_Prop_Lev = c(rep(1, num_low_white), rep(2, num_high_white)))
+Let's start with the value in the "low proportion white, high case rate category" (which is `r propwhite_take2[2,1]`). 
+
+
+We'll create a fake dataset that looks like the observed data (it would produce the same table as above), but then we will randomly reassign the levels of "proportion white" 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of `r propwhite_take2[2,1]`). We can also calculate the proportion of simulated values greater than or equal to `r propwhite_take2[2,1]`. See if you can follow the code below:  
+
+```{r sim, exercise=TRUE, exercise.setup = 'load-data'}
+
+thresholdValue <- propwhite_take2[2,1]
+
+reducedZCTA <- zcta %>% 
+  transmute(White_Prop = round(White_Total/Race_Total*100, 1), 
+            Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
+  na.omit()
+
 set.seed(333)
 simvals <- vector()
 for(i in 1:1000){
-  simdata$White_Prop_Lev <- sample(simdata$White_Prop_Lev)
+  # reshuffle the proportion white
+  reducedZCTA$White_Prop <- sample(reducedZCTA$White_Prop)
+  # then recompute median split
+  simdata <- reducedZCTA %>% 
+    transmute(White_Prop_Lev = ntile(White_Prop, 2),
+              CaseRate_Lev = ntile(Cases_per_1000, 2)) 
   simvals[i] <- table(simdata)[2,1]
 }
 
-hist(simvals)
-abline(v=57, lwd=2, col="blue")
 
-#proportion of simulated values greater than 57
-sum(simvals>=57)/1000
+hist(simvals, xlim=c(35,65), main="Zipcode race permutation results",
+     xlab="No. of cases with low-white and high-case split")
+abline(v=thresholdValue, lwd=2, col="blue")
+
+#proportion of simulated values greater than threshold
+sum(simvals>=thresholdValue)/1000
 ```
   
-We note that only about 0.4% of our simulated values were greater than 57. It's therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists (there are many theories that have been proposed).   
+We note that only about `r 100*sum(simvals>=thresholdValue)/1000`% of our simulated values were greater than `r thresholdValue`. It's therefore very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists (there are many theories that have been proposed).   
 
 
 ### A quick side note:   
@@ -237,33 +286,41 @@ We note that only about 0.4% of our simulated values were greater than 57. It's 
 Another thing to take a look at: you may have noticed that we split case rate and proportion white into only two equally sized categories above. Here is the code again (except the code to specify the row and column names was taken out for now; see how to replace it in the "solution"). See if you can change the code to split the zip codes into 3, or even 4 categories. Do you notice a different pattern?  
 ```{r oneway_race3, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite2 <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop = round(White_Total/Race_Total*100, 2)) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 2)) %>%
+  na.omit() %>%
   mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
   mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %>%
   group_by(White_Prop_Lev, CaseRate_Lev) %>%
   summarise(N_Zips = n()) %>%
   spread(White_Prop_Lev, N_Zips, fill=0)
-propwhite2 <- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
+
+propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
+colnames(propwhite2) <- c("case/race", "Low Prop White", "High Prop White")
+
 propwhite2
+
 ```  
   
 ```{r oneway_race3-solution}
 propwhite2 <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  mutate(White_Prop = round(White_Total/Race_Total*100, 2)) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  na.omit() %>%
   mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %>%
   mutate(CaseRate_Lev = ntile(Cases_per_1000, 3)) %>%
   group_by(White_Prop_Lev, CaseRate_Lev) %>%
   summarise(N_Zips = n()) %>%
   spread(White_Prop_Lev, N_Zips, fill=0)
-propwhite2 <- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
 propwhite2[,1] <- c("Low Case Rate", "Medium Case Rate", "High Case Rate")
-colnames(propwhite2) <- c(NA, "Low Prop White", "Medium Prop White", "High Prop White")
+colnames(propwhite2) <- c("case/race", "Low Prop White", "Medium Prop White", "High Prop White")
+
 propwhite2
 ```
   
-## Scatter Plots: Race/Income   
+  
+  
+# Scatter Plots: Race/Income   
 We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
 ```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$White_Total/zcta$Population*100,
@@ -293,7 +350,7 @@ plot(zcta$Med_Income,
    
    
 ## Mapping NYC    
-In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zip-code level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
+In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data'}
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
   if(length(nbreaks) == 1) {

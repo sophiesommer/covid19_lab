@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<meta name="progressive" content="false" />
+<meta name="allow-skip" content="false" />
+
+<title>Lab: NYC + Covid-19 + Census Data</title>
+
+
+<!-- highlightjs -->
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+<!-- taken from https://github.com/rstudio/rmarkdown/blob/67b7f5fc779e4cfdfd0f021d3d7745b6b6e17149/inst/rmd/h/default.html#L296-L362 -->
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("section-TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+<!-- end tabsets -->
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="pageContent band">
+<div class="bandContent page">
+
+<div class="topics">
+
+<div id="section-the-data-a-summary" class="section level2">
+<h2>The Data: A summary</h2>
+<p>In this lab, you will inspect and interact with some datasets that habe been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: <a href="https://github.com/nychealth/coronavirus-data" class="uri">https://github.com/nychealth/coronavirus-data</a>), and shape files for NYC zip codes (downloaded from here: <a href="https://data.cityofnewyork.us/widgets/i8iw-xf4u" class="uri">https://data.cityofnewyork.us/widgets/i8iw-xf4u</a>). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:</p>
+<ul>
+<li>zcta - data by zip code (zipcode tabulation area),</li>
+<li>borough - data by borough</li>
+<li>NYC_zips - a shape file used only for plotting maps of nyc zip codes</li>
+</ul>
+</div>
+<div id="section-inspecting-the-data" class="section level2">
+<h2>Inspecting the data</h2>
+<div id="section-exercise-print-the-first-few-rows" class="section level3">
+<h3>Exercise: Print the first few rows</h3>
+Use the <code>head()</code> function or square brackets to inspect the first 5 rows of the <code>borough</code> and <code>zcta</code> datasets.
+<div class="tutorial-exercise" data-label="inspect_data" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="inspect_data-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>head(borough, 5)
+head(zcta, 5)
+#or:
+borough[1:5,]
+zcta[1:5,]</code></pre>
+</div>
+<p><div class="panel-heading tutorial-quiz-title">Quiz</div><div class="panel panel-default">
+<div data-label="5row-quiz-1" class="tutorial-question panel-body">
+<div id="5row-quiz-1-answer_container" class="shiny-html-output"></div>
+<div id="5row-quiz-1-message_container" class="shiny-html-output"></div>
+<div id="5row-quiz-1-action_button_container" class="shiny-html-output"></div>
+<script>if (Tutorial.triggerMathJax) Tutorial.triggerMathJax()</script>
+</div>
+</div></p>
+</div>
+<div id="section-exercise-inspect-the-structure-of-the-data" class="section level3">
+<h3>Exercise: Inspect the structure of the data</h3>
+<p>Try using the <code>str()</code> function below to look at the structure of each dataset. The term “structure” refers to the organization of a data set, which can be more complicated than a simple table. For example, it could have variables nested in other variables. When the data are in a table, <code>str()</code> will tell you about the names and types of variables.</p>
+<div class="tutorial-exercise" data-label="structure" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="structure-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>str(borough)
+str(zcta)</code></pre>
+</div>
+At this point, it might be useful to also inspect some of the variables more carefully to make sure we understand what they are. For now, let’s focus on the zipcode level data. Looking at the data structure, we note that the second three variables are called “Positive,” “Total,” and “zcta_cum.perc_pos”. “Positive” gives the number of positive tests by zipcode, “Total” gives the number of total tests by zipcode. We can confirm below that zcta_cum.perc_pos is just the percentage of total tests that were positive (i.e., Positive/Total*100, rounded to two decimals):<br />
+
+<div class="tutorial-exercise" data-label="postotal" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>head(round(zcta$Positive/zcta$Total*100,2))
+head(zcta$zcta_cum.perc_pos)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>Another useful consistency check: the census data includes a “total” variable for most demographic variables (i.e., sex, age, income, race, education). In this dataset, we have collected the reported values for “Race_Total” (i.e., total of all race categories). Does this show the same number as the total population from the SEX BY AGE tables? Perhaps estimates based on race do not count everybody? Upon further inspection, these variables actually do have the same values:</p>
+<div class="tutorial-exercise" data-label="pop" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>head(zcta$Race_Total)
+head(zcta$Population)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>That said, you might notice that there is another variable called TotalPop. This variable was imported as part of the group of variables related to educational attainment level, including Bachelors, Masters, Professional, and Doctorate degrees.</p>
+<div class="tutorial-exercise" data-label="pop2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>head(zcta$Population)
+head(zcta$TotalPop)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>Note that the values in this column are smaller than the Population (equals Race_Total) columns. Looking at the documentation provided by the Census for this group of variables, it turns out the variables we were examining (college education) are recorded only for people over the age of 25. So the moral of the story is, don’t always trust the names of the variables created by someone else (in this case, us)!</p>
+</div>
+</div>
+<div id="section-and-2-way-tables-racial-composition-and-income" class="section level2">
+<h2>1 and 2-way Tables: Racial composition and Income</h2>
+<p>First, let’s make a one way table of racial composition. Race is a complex subject and has many categories in the ACS dataset. A simplifying step is to compare one category against all the others, for example proportion white. You could choose any race (proportions of non-Hispanic Asian are in the column NH_Asian). But we have included total population white, since a lot of the conversation around racial disparities centers on the degree to which a white majority is associated with privilege.</p>
+<p>Suppose, the, that we want to look at racial composition in terms of proportion white, and in particular, we want to discretize this into three groups: low, medium, and high proportion white. The code for this transformation looks a little complicated, but you should be able to follow the general idea. The <code>ntile</code> function assigns each zipcode to one of our three groups, and the <code>group_by</code> and <code>summarize</code> functions agreggate the positive case rate over all of the zipcodes in the same group.</p>
+<div class="tutorial-exercise" data-label="oneway_race" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>propwhite &lt;- zcta %&gt;% 
+  mutate(White_Prop = round(White_Total/Race_Total,2)) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %&gt;%
+  group_by(White_Prop_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
+propwhite &lt;- propwhite[-nrow(propwhite),]
+propwhite</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="oneway_race-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>propwhite &lt;- zcta %&gt;% 
+  mutate(White_Prop = round(White_Total/Race_Total,2)) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %&gt;%
+  group_by(White_Prop_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) 
+propwhite &lt;- propwhite[-nrow(propwhite),]
+propwhite</code></pre>
+</div>
+<p>Notice that case rates are higher in zipcodes with a relatively low proportion of white people, and lower in zipcodes with a relatively high proportion of white people). Activity: Run the provided code. Then see if you can change it so that there are only 2 categories for the White_Prop variable.</p>
+<div id="section-income" class="section level3">
+<h3>Income</h3>
+We can similarly define a one-way table of zipcodes summarized by low income, medium income, and high income. (Notice that case rates are higher in zip codes with a relatively low median income, and lower in zip codes with a relatively high median income):<br />
+
+<div class="tutorial-exercise" data-label="oneway_inc" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>inc &lt;- zcta %&gt;% 
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %&gt;%
+  group_by(Med_Inc_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
+inc &lt;- inc[-nrow(inc),]
+inc</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>In the above examples of one-way tables, we take a single variable, such as proportion-white or median-income, and discretize that variable into levels. We then group the zipcodes (which are our data cases) by level, and display this COVID case-rate aggregated over the zipcodes in each level.</p>
+<p>Question: based on the code that we used, are we “weighing” each zipcode by its population, or are we weighing each zipcode equally?</p>
+</div>
+<div id="section-two-variables-at-time" class="section level3">
+<h3>Two variables at time</h3>
+<p>Let’s now try to reproduce a 2-way table, looking simultaneously at the variables of race and income. To make a two way table, of course we need to create the two groupings (proportion-white and median-income) as before. Now when we use the <code>group_by</code> function, we include both variables.</p>
+We notice something kind of interesting. It seems like case rates don’t vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.<br />
+
+<div class="tutorial-exercise" data-label="twoway" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>inc_propwhite &lt;- zcta %&gt;% 
+  select(White_Total, Race_Total, Med_Income, Positive, Population) %&gt;% 
+  na.omit() %&gt;%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %&gt;%
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %&gt;%
+  group_by(White_Prop_Lev, Med_Inc_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %&gt;%
+  spread(White_Prop_Lev, Cases_per_1000, fill=0)
+
+inc_propwhite[,1] &lt;- c(&quot;Low Income&quot;, &quot;Med Income&quot;, &quot;High Income&quot;)
+colnames(inc_propwhite) &lt;- c(&quot;inc/race&quot;,&quot;Low Prop White&quot;, &quot;Med Prop White&quot;, &quot;High Prop White&quot;)
+inc_propwhite</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="twoway-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+
+</div>
+For a moment, let’s come back to the one-way table of the proportion of the population that is white. Here is another way we could have constructed that one-way table for race (this version is really a two-way table of race and case rate). The code below does the following: First, we divide the zip codes into two equally sized groups based on the proportion of the population that is white (half the zip codes are classified as having a high proportion of white people, half are classified as having a low proportion of white people). Then, we do the same thing by case rate (half the zip codes are classified as having a high case rate and half are classified as having a low case rate). Finally, we construct a 2-way table of these new categorical variables, where the values in the table are counts of zip codes. For example, there are 38 zip codes that are classified as having a low case rate AND a low proportion of white people.<br />
+
+<div class="tutorial-exercise" data-label="oneway_race2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>propwhite2 &lt;- zcta %&gt;% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %&gt;%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %&gt;%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %&gt;%
+  group_by(White_Prop_Lev, CaseRate_Lev) %&gt;%
+  summarise(N_Zips = n()) %&gt;%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 &lt;- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
+propwhite2[,1] &lt;- c(&quot;Low Case Rate&quot;, &quot;High Case Rate&quot;)
+colnames(propwhite2) &lt;- c(NA, &quot;Low Prop White&quot;, &quot;High Prop White&quot;)
+propwhite2</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+We observe something that may or may not be surprising: There are more zip codes with a high proportion of white people and low case rate or low proportion of white people and high case rate (as compared to the other two categories). This suggests that zip codes with a higher proportion of non-white residents tend to have higher case rates. Can we test whether these differences are meaningful?<br />
+Let’s start with the value in the “low proportion white, high case rate category” (which is 57). We’ll create a fake dataset that looks like the observed data (it would produce the same table as above), but then we will randomly reassign the levels of “proportion white” 1000 times, each time storing the number of zip codes in the low-white/high-case category. Then we can plot a histogram of the simulated values (with a vertical line at our observed value of 57). We can also calculate the proportion of simulated values greater than 57. See if you can follow the code below:<br />
+
+<div class="tutorial-exercise" data-label="sim" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>numzips &lt;- 38+57+57+37
+num_low_white &lt;- num_low_case &lt;- 38+57
+num_high_white &lt;- num_high_case &lt;- 57+37
+
+simdata &lt;- data.frame(CaseRate_Lev = c(rep(1, num_low_case), rep(2, num_high_case)),
+                      White_Prop_Lev = c(rep(1, num_low_white), rep(2, num_high_white)))
+set.seed(333)
+simvals &lt;- vector()
+for(i in 1:1000){
+  simdata$White_Prop_Lev &lt;- sample(simdata$White_Prop_Lev)
+  simvals[i] &lt;- table(simdata)[2,1]
+}
+
+hist(simvals)
+abline(v=57, lwd=2, col=&quot;blue&quot;)
+
+#proportion of simulated values greater than 57
+sum(simvals&gt;=57)/1000</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>We note that only about 0.4% of our simulated values were greater than 57. It’s therefore possible, but very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists (there are many theories that have been proposed).</p>
+</div>
+<div id="section-a-quick-side-note" class="section level3">
+<h3>A quick side note:</h3>
+Another thing to take a look at: you may have noticed that we split case rate and proportion white into only two equally sized categories above. Here is the code again (except the code to specify the row and column names was taken out for now; see how to replace it in the “solution”). See if you can change the code to split the zip codes into 3, or even 4 categories. Do you notice a different pattern?<br />
+
+<div class="tutorial-exercise" data-label="oneway_race3" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>propwhite2 &lt;- zcta %&gt;% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 2)) %&gt;%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %&gt;%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 2)) %&gt;%
+  group_by(White_Prop_Lev, CaseRate_Lev) %&gt;%
+  summarise(N_Zips = n()) %&gt;%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 &lt;- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
+propwhite2</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="oneway_race3-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>propwhite2 &lt;- zcta %&gt;% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %&gt;%
+  mutate(Cases_per_1000 = round(Positive/Population*1000, 2)) %&gt;%
+  mutate(CaseRate_Lev = ntile(Cases_per_1000, 3)) %&gt;%
+  group_by(White_Prop_Lev, CaseRate_Lev) %&gt;%
+  summarise(N_Zips = n()) %&gt;%
+  spread(White_Prop_Lev, N_Zips, fill=0)
+propwhite2 &lt;- propwhite2[-nrow(propwhite2),-ncol(propwhite2)]
+propwhite2[,1] &lt;- c(&quot;Low Case Rate&quot;, &quot;Medium Case Rate&quot;, &quot;High Case Rate&quot;)
+colnames(propwhite2) &lt;- c(NA, &quot;Low Prop White&quot;, &quot;Medium Prop White&quot;, &quot;High Prop White&quot;)
+propwhite2</code></pre>
+</div>
+</div>
+</div>
+<div id="section-scatter-plots-raceincome" class="section level2">
+<h2>Scatter Plots: Race/Income</h2>
+We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.<br />
+
+<div class="tutorial-exercise" data-label="scatter1" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>plot(zcta$White_Total/zcta$Population*100,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab=&quot;percent white&quot;, 
+     ylab=&quot;pos cases per 1000 ppl&quot;, 
+     pch=16)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+Next, we do the same for positive case rate vs. income:<br />
+
+<div class="tutorial-exercise" data-label="scatter2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>plot(zcta$Med_Income,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab=&quot;median income&quot;, 
+     ylab=&quot;pos cases per 1000 ppl&quot;, 
+     pch=16)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+And finally, percent white vs. median income:<br />
+
+<div class="tutorial-exercise" data-label="scatter3" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>plot(zcta$Med_Income,
+     zcta$White_Total/zcta$Population*100, 
+     xlab=&quot;median income&quot;, 
+     ylab=&quot;pos cases per 1000 ppl&quot;, 
+     pch=16)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-mapping-nyc" class="section level2">
+<h2>Mapping NYC</h2>
+In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.<br />
+
+<div class="tutorial-exercise" data-label="map1" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>getShapeColors &lt;- function(data, nbreaks=5, missingcol=&quot;gray88&quot;, rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
+  if(length(nbreaks) == 1) {
+    mybreaks &lt;- c(-1, quantile(data,
+                               probs = seq(0, 1, length.out=nbreaks+1),
+                               na.rm = T))
+  } else {
+    mybreaks &lt;- c(-1,nbreaks)
+  }
+  if(!is.null(mycolors)){
+    mycols &lt;- mycolors
+  } else {
+    mycols &lt;- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
+                  seq(0.05,max_opac, length.out = length(mybreaks)-1))
+  }
+  mycols[1] &lt;- missingcol
+  data[is.na(data)] &lt;- -.1
+  mycolorscheme &lt;- cut(data, mybreaks) %&gt;%
+    as.numeric()
+  mycolorscheme &lt;- mycols[mycolorscheme]
+  levs &lt;- levels(cut(data, mybreaks))
+  levs[1] &lt;- &quot;No Data&quot;
+  return(list(mycolorscheme, levs, mycols))
+}</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+Let’s first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we’ll divide the case rates into quintiles in order to match the map published by the Furman Center.<br />
+
+<div class="tutorial-exercise" data-label="map2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>col_lev &lt;- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                          5, 
+                          &quot;white&quot;, 
+                          mycolors=viridis(6))
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = &quot;Positive Tests Per 1000 People by Zip Code&quot;, 
+     cex = 10, lwd=0.01)
+
+legend(&quot;topleft&quot;, 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = &quot;Positive Tests per 1000 People&quot;)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+Next, we could plot the same map but change the colors so that they reflect the proportion of the population that is non-white.<br />
+
+<div class="tutorial-exercise" data-label="map3" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>col_lev &lt;- getShapeColors(round((1-zcta$White_Total/zcta$Population)*100,1), 
+                          5, 
+                          &quot;white&quot;, 
+                          mycolors=viridis(6))
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = &quot;Percent of Population that is Non-White&quot;, 
+     cex = 10, lwd=0.01)
+
+legend(&quot;topleft&quot;, 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = &quot;% Non-White&quot;)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<p>An open-ended question about trying to visualize these two things on a plot simultaneously: Suppose that we wanted to see how well the two maps above “line up” (without scrolling back and forth between them). Here’s one way we might try to do that (although maybe there are better ways.. or maybe this is an ill-advised endeavor altogether): We can plot the case rate quintile as increasingly dark shades of transparant blue, and the proportion non-white as increasingly dark shades of transparant red. Finally, we can overlay the maps, one on top of the other. Then any zip code with similar levels of these two variables will appear purple, while zip codes with a high-level of one variable, but not the other, will appear red or blue.</p>
+<div class="tutorial-exercise" data-label="map4" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>col_lev1 &lt;- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                           5, 
+                           rdgrbl = c(0,0,1))
+col_lev2 &lt;- getShapeColors(round((1-zcta$White_Total/zcta$Population)*100,1), 
+                           5, 
+                           rdgrbl = c(1,0,0))
+
+par(mfrow=c(1,3))
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01)
+legend(&quot;topleft&quot;, 
+       legend = col_lev1[[2]], 
+       fill = col_lev1[[3]], 
+       cex = 0.8, 
+       title = &quot;Pos Tests per 1000&quot;)
+
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01)
+legend(&quot;topleft&quot;, 
+       legend = col_lev2[[2]], 
+       fill = col_lev2[[3]], 
+       cex = 0.8, 
+       title = &quot;% Non-White&quot;)
+
+
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01)
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01, add=T)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+We can also look at that plot more up close, and combine it with a scatter plot, which might make the picture a little clearer (note the purple dots in the scatter plot fall closer to the imaginary line you might draw through all the points; more scattered points are more red or blue):<br />
+
+<div class="tutorial-exercise" data-label="map5" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>col_lev1 &lt;- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                           5, 
+                           rdgrbl = c(0,0,1))
+col_lev2 &lt;- getShapeColors(round((1-zcta$White_Total/zcta$Population)*100,1), 
+                           5, 
+                           rdgrbl = c(1,0,0))
+
+par(mfrow=c(1,2))
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01)
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = &quot;&quot;, 
+     cex = 10, lwd=0.01, add=T)
+
+plot(round((1-zcta$White_Total/zcta$Population)*100,1),
+     round(zcta$Positive/zcta$Population*1000,1),
+     col = col_lev2[[1]],
+     main = &quot;&quot;,
+     xlab = &quot;Proportion Non-White&quot;,
+     ylab = &quot;Pos Cases per 1000 Ppl&quot;,
+     pch = 16)
+points(round((1-zcta$White_Total/zcta$Population)*100,1),
+       round(zcta$Positive/zcta$Population*1000,1),
+       col = col_lev1[[1]],
+       pch = 16)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-exploration-workspace" class="section level2">
+<h2>Exploration Workspace</h2>
+Now that we’ve taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?<br />
+  ### Code to examine the data<br />
+
+<div class="tutorial-exercise" data-label="practice1" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>str(zcta)  </code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+<div id="section-code-to-construct-a-1-way-table" class="section level3">
+<h3>Code to construct a 1-way table</h3>
+<div class="tutorial-exercise" data-label="practice2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>inc &lt;- zcta %&gt;% 
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %&gt;%
+  group_by(Med_Inc_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2))
+inc &lt;- inc[-nrow(inc),]
+inc</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-code-to-construct-a-2-way-table-of-case-rates" class="section level3">
+<h3>Code to construct a 2-way table of case rates</h3>
+<div class="tutorial-exercise" data-label="practice3" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>inc_propwhite &lt;- zcta %&gt;% 
+  mutate(White_Prop = round((White_Total)/Race_Total), 2) %&gt;%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %&gt;%
+  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %&gt;%
+  group_by(White_Prop_Lev, Med_Inc_Lev) %&gt;%
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Population)*1000, 2)) %&gt;%
+  spread(White_Prop_Lev, Cases_per_1000, fill=0)
+inc_propwhite &lt;- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
+inc_propwhite[,1] &lt;- c(&quot;Low Income&quot;, &quot;Med Income&quot;, &quot;High Income&quot;)
+colnames(inc_propwhite) &lt;- c(NA, &quot;Low Prop White&quot;, &quot;Med Prop White&quot;, &quot;High Prop White&quot;)
+inc_propwhite</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-code-to-construct-a-scatter-plot" class="section level3">
+<h3>Code to construct a scatter plot</h3>
+<div class="tutorial-exercise" data-label="practice4" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>plot(zcta$Med_Income,
+     round(zcta$Positive/zcta$Population*1000,1), 
+     xlab=&quot;median income&quot;, 
+     ylab=&quot;pos cases per 1000 ppl&quot;, 
+     pch=16)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-code-construct-a-map" class="section level3">
+<h3>Code construct a map</h3>
+<div class="tutorial-exercise" data-label="practice5" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>col_lev &lt;- getShapeColors(round(zcta$Positive/zcta$Population*1000,1), 
+                          5, 
+                          &quot;white&quot;, 
+                          rdgrbl = c(0,1,0),
+                          max_opac = 0.7)
+
+plot(NYC_zips, col = col_lev[[1]], 
+     main = &quot;Positive Tests Per 1000 People by Zip Code&quot;, 
+     cex = 10, lwd=0.01)
+
+legend(&quot;topleft&quot;, 
+       legend = col_lev[[2]], 
+       fill = col_lev[[3]], 
+       cex = 0.8, 
+       title = &quot;Positive Tests per 1000 People&quot;)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+</div>
+<div id="section-empty-workspace-for-you" class="section level3">
+<h3>Empty workspace for you!</h3>
+<div class="tutorial-exercise" data-label="practice_blank" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"load-data","exercise.checker":"NULL"}</script>
+</div>
+
+<script type="application/shiny-prerendered" data-context="server-start">
+if(!require(learnr)) {
+  install.packages("learnr")
+}
+library(learnr)
+
+if(!require(dplyr)) {
+  install.packages("dplyr")
+}
+library(dplyr)
+
+if(!require(rgdal)) {
+  install.packages("openintro")
+}
+library(rgdal)
+
+if(!require(viridis)) {
+  install.packages("openintro")
+}
+library(viridis)
+
+if(!require(shiny)) {
+  install.packages("shiny")
+}
+library(shiny)
+
+if(!require(tidyr)) {
+  install.packages("tidyr")
+}
+library(tidyr)
+
+borough <- read.csv("data/data_summ_bor.csv")
+zcta <- read.csv("data/data_summ_zcta.csv")
+NYC_zips <- readOGR("Shape_Files/ZIP_CODE_040114.shp")
+
+getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
+  if(length(nbreaks) == 1) {
+    mybreaks <- c(-1, quantile(data,
+                               probs = seq(0, 1, length.out=nbreaks+1),
+                               na.rm = T))
+  } else {
+    mybreaks <- c(-1,nbreaks)
+  }
+  if(!is.null(mycolors)){
+    mycols <- mycolors
+  } else {
+    mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
+                  seq(0.05,max_opac, length.out = length(mybreaks)-1))
+  }
+  mycols[1] <- missingcol
+  data[is.na(data)] <- -.1
+  mycolorscheme <- cut(data, mybreaks) %>%
+    as.numeric()
+  mycolorscheme <- mycols[mycolorscheme]
+  levs <- levels(cut(data, mybreaks))
+  levs[1] <- "No Data"
+  return(list(mycolorscheme, levs, mycols))
+}
+
+knitr::opts_chunk$set(echo = FALSE)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::register_http_handlers(session, metadata = NULL)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+session$onSessionEnded(function() {
+        learnr:::session_stop_event(session)
+      })
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-inspect_data-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-inspect_data-code-editor`)), session)
+output$`tutorial-exercise-inspect_data-output` <- renderUI({
+  `tutorial-exercise-inspect_data-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "5row-quiz-1",     question = structure("What is the median income in the Bronx?", html = TRUE, class = c("html",     "character")), answers = list(structure(list(id = "lnr_ans_1d56dd5",         option = "36381", value = "36381", label = structure("36381", html = TRUE, class = c("html",         "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer",     "tutorial_quiz_answer")), structure(list(id = "lnr_ans_8b23b52",         option = "59620", value = "59620", label = structure("59620", html = TRUE, class = c("html",         "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer",     "tutorial_quiz_answer")), structure(list(id = "lnr_ans_d455735",         option = "46586", value = "46586", label = structure("46586", html = TRUE, class = c("html",         "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer",     "tutorial_quiz_answer")), structure(list(id = "lnr_ans_cfbd274",         option = "27074", value = "27074", label = structure("27074", html = TRUE, class = c("html",         "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer",     "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html",     "character")), try_again = structure("Try Again", html = TRUE, class = c("html",     "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html",     "character")), try_again = structure("Incorrect", html = TRUE, class = c("html",     "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html",     "character")), message = NULL, post_message = NULL), ids = list(        answer = "5row-quiz-1-answer", question = "5row-quiz-1"),     loading = structure("<strong>Loading:<\u002fstrong> \nWhat is the median income in the Bronx?\n<br/><br/><br/>", html = TRUE, class = c("html",     "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 899572444.581104, options = list()), class = c("learnr_radio", "tutorial_question")))
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-structure-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-structure-code-editor`)), session)
+output$`tutorial-exercise-structure-output` <- renderUI({
+  `tutorial-exercise-structure-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-postotal-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-postotal-code-editor`)), session)
+output$`tutorial-exercise-postotal-output` <- renderUI({
+  `tutorial-exercise-postotal-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-pop-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-pop-code-editor`)), session)
+output$`tutorial-exercise-pop-output` <- renderUI({
+  `tutorial-exercise-pop-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-pop2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-pop2-code-editor`)), session)
+output$`tutorial-exercise-pop2-output` <- renderUI({
+  `tutorial-exercise-pop2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-oneway_race-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-oneway_race-code-editor`)), session)
+output$`tutorial-exercise-oneway_race-output` <- renderUI({
+  `tutorial-exercise-oneway_race-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-oneway_inc-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-oneway_inc-code-editor`)), session)
+output$`tutorial-exercise-oneway_inc-output` <- renderUI({
+  `tutorial-exercise-oneway_inc-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-twoway-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-twoway-code-editor`)), session)
+output$`tutorial-exercise-twoway-output` <- renderUI({
+  `tutorial-exercise-twoway-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-oneway_race2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-oneway_race2-code-editor`)), session)
+output$`tutorial-exercise-oneway_race2-output` <- renderUI({
+  `tutorial-exercise-oneway_race2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-sim-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-sim-code-editor`)), session)
+output$`tutorial-exercise-sim-output` <- renderUI({
+  `tutorial-exercise-sim-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-oneway_race3-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-oneway_race3-code-editor`)), session)
+output$`tutorial-exercise-oneway_race3-output` <- renderUI({
+  `tutorial-exercise-oneway_race3-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-scatter1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-scatter1-code-editor`)), session)
+output$`tutorial-exercise-scatter1-output` <- renderUI({
+  `tutorial-exercise-scatter1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-scatter2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-scatter2-code-editor`)), session)
+output$`tutorial-exercise-scatter2-output` <- renderUI({
+  `tutorial-exercise-scatter2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-scatter3-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-scatter3-code-editor`)), session)
+output$`tutorial-exercise-scatter3-output` <- renderUI({
+  `tutorial-exercise-scatter3-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-map1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-map1-code-editor`)), session)
+output$`tutorial-exercise-map1-output` <- renderUI({
+  `tutorial-exercise-map1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-map2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-map2-code-editor`)), session)
+output$`tutorial-exercise-map2-output` <- renderUI({
+  `tutorial-exercise-map2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-map3-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-map3-code-editor`)), session)
+output$`tutorial-exercise-map3-output` <- renderUI({
+  `tutorial-exercise-map3-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-map4-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-map4-code-editor`)), session)
+output$`tutorial-exercise-map4-output` <- renderUI({
+  `tutorial-exercise-map4-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-map5-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-map5-code-editor`)), session)
+output$`tutorial-exercise-map5-output` <- renderUI({
+  `tutorial-exercise-map5-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice1-code-editor`)), session)
+output$`tutorial-exercise-practice1-output` <- renderUI({
+  `tutorial-exercise-practice1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice2-code-editor`)), session)
+output$`tutorial-exercise-practice2-output` <- renderUI({
+  `tutorial-exercise-practice2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice3-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice3-code-editor`)), session)
+output$`tutorial-exercise-practice3-output` <- renderUI({
+  `tutorial-exercise-practice3-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice4-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice4-code-editor`)), session)
+output$`tutorial-exercise-practice4-output` <- renderUI({
+  `tutorial-exercise-practice4-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice5-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice5-code-editor`)), session)
+output$`tutorial-exercise-practice5-output` <- renderUI({
+  `tutorial-exercise-practice5-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-practice_blank-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-practice_blank-code-editor`)), session)
+output$`tutorial-exercise-practice_blank-output` <- renderUI({
+  `tutorial-exercise-practice_blank-result`()
+})
+</script>
+ <!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="dependencies">
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/cerulean.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["pagedtable"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pagedtable-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/pagedtable.js"]},{"type":"character","attributes":{},"value":["css/pagedtable.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["9.12.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["textmate.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-format"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmarkdown/templates/tutorial/resources"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-format.js"]},{"type":"character","attributes":{},"value":["tutorial-format.css","rstudio-theme.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["navigation"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/navigation-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tabsets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["9.12.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["default.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["font-awesome"]},{"type":"character","attributes":{},"value":["5.1.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/fontawesome"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/all.css","css/v4-shims.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["idb-keyvalue"]},{"type":"character","attributes":{},"value":["3.2.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/idb-keyval"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["idb-keyval-iife-compat.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.10.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.10.1"]}]}]}
+</script>
+<!--/html_preserve-->
+<!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="execution_dependencies">
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64]}},"value":[{"type":"character","attributes":{},"value":["assertthat","backports","base","checkmate","colorspace","compiler","crayon","datasets","digest","dplyr","ellipsis","evaluate","fastmap","ggplot2","glue","graphics","grDevices","grid","gridExtra","gtable","htmltools","htmlwidgets","httpuv","jsonlite","knitr","later","lattice","lazyeval","learnr","lifecycle","magrittr","markdown","methods","mime","munsell","pillar","pkgconfig","promises","purrr","R6","Rcpp","rgdal","rlang","rmarkdown","rprojroot","scales","shiny","sp","stats","stringi","stringr","tibble","tidyr","tidyselect","tools","utils","vctrs","viridis","viridisLite","withr","xfun","xtable","yaml","zeallot"]},{"type":"character","attributes":{},"value":["0.2.1","1.1.5","3.6.2","2.0.0","1.4-1","3.6.2","1.3.4","3.6.2","0.6.23","0.8.3","0.3.0","0.14","1.0.1","3.2.1","1.3.1","3.6.2","3.6.2","3.6.2","2.3","0.3.0","0.4.0","1.5.1","1.5.2","1.6","1.26","1.0.0","0.20-38","0.2.2","0.10.1","0.1.0","1.5","1.1","3.6.2","0.8","0.5.0","1.4.3","2.0.3","1.1.0","0.3.3","2.4.1","1.0.3","1.4-8","0.4.2","2.1","1.3-2","1.1.0","1.4.0","1.3-2","3.6.2","1.4.3","1.4.0","2.1.3","1.0.0","0.2.5","3.6.2","3.6.2","0.2.1","0.5.1","0.3.0","2.1.2","0.11","1.8-4","2.2.0","0.1.0"]}]}]}
+</script>
+<!--/html_preserve-->
+</div>
+</div>
+
+</div> <!-- topics -->
+
+<div class="topicsContainer">
+<div class="topicsPositioner">
+<div class="band">
+<div class="bandContent topicsListContainer">
+
+<!-- begin doc-metadata -->
+<div id="doc-metadata">
+<h2 class="title toc-ignore" style="display:none;">Lab: NYC + Covid-19 + Census Data</h2>
+</div>
+<!-- end doc-metadata -->
+
+</div> <!-- bandContent.topicsListContainer -->
+</div> <!-- band -->
+</div> <!-- topicsPositioner -->
+</div> <!-- topicsContainer -->
+
+
+</div> <!-- bandContent page -->
+</div> <!-- pageContent band -->
+
+
+
+
+<script>
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+
+</body>
+
+</html>
