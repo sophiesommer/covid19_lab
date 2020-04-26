@@ -66,7 +66,8 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
   return(list(mycolorscheme, levs, mycols))
 }
 
-propwhite_take2 <- zcta %>% 
+zcta2 <- zcta[!duplicated(zcta$MODZCTA),]
+propwhite_take2 <- zcta2 %>% 
   transmute(White_Prop = round(White_Total/Race_Total*100, 2),
          Cases_per_1000 = round(Positive/Total_Pop*1000, 2)) %>%
   na.omit() %>%
@@ -77,7 +78,7 @@ propwhite_take2 <- zcta %>%
 
 thresholdValue <- propwhite_take2[2,1]
 
-reducedZCTA <- zcta %>% 
+reducedZCTA <- zcta2 %>% 
   transmute(White_Prop = round(White_Total/Race_Total*100, 1), 
             Cases_per_1000 = round(Positive/Total_Pop*1000, 2)) %>%
   na.omit()
@@ -428,7 +429,7 @@ And finally, percent white vs. median income:
 plot(zcta$Med_Income,
      zcta$White_Total/zcta$Total_Pop*100, 
      xlab="median income", 
-     ylab="pos cases per 1000 ppl", 
+     ylab="percent white", 
      pch=16)
 ```  
    
