@@ -105,7 +105,7 @@ zcta <- zcta[!duplicated(zcta$MODZCTA),]
 
 ```
   
-## The Data: A summary 
+## 1. The Data 
 In this lab, you will inspect and interact with some datasets that habe been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
 
 + zcta - data by zip code (zipcode tabulation area),
@@ -113,7 +113,7 @@ In this lab, you will inspect and interact with some datasets that habe been com
 + NYC_zips - a shape file used only for plotting maps of nyc zip codes 
 
 
-## Inspecting the data  
+## 2. Inspecting the data  
 
 ### Exercise: Print the first few rows
 
@@ -177,7 +177,7 @@ head(zcta$Total_EducPop)
   
 Note that the values in this column are smaller than the Population (equals Race_Total) columns. Looking at the documentation provided by the Census for this group of variables, it turns out the variables we were examining (college education) are recorded only for people over the age of 25.  So the moral of the story is, don't always trust the names of the variables created by someone else (in this case, us)!  
 
-## Case Rates by Zip Code 
+## 3. Case Rates by Zip Code 
 
 This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities)
   
@@ -231,7 +231,7 @@ plot(zcta$Total/zcta$Total_Pop*100,
 It seems like, for zip codes where more than 2.5% of the population is being tested, the positive test rate does decrease as the testing rate increases; however, the lowest positive test rates are still occuring in the zip codes with the lowest testing rates. That's all we'll say about this here, but please feel free to investigate further! The main take-away for now is that your denominator matters.  
   
 
-## Tables by race and income  
+## 4. Tables by race and income  
 
 Race is a complex subject and, in fact, race has many categorizations in the ACS dataset. A simplifying step, if we are intersted in associations between race and COVID-19 outcomes, is to compare one category against all the others. You could choose any race (e.g., proportions of non-Hispanic Asian are in the column NH_Asian). But we will concentrate on total population white, since a lot of the conversation around racial disparities centers on the degree to which a white majority is associated with privilege. 
 
@@ -404,7 +404,7 @@ propwhite2
   
   
   
-## Scatter Plots: Race/Income   
+## 5. Scatter Plots: Race/Income   
 We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
 ```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$White_Total/zcta$Total_Pop*100,
@@ -433,7 +433,7 @@ plot(zcta$Med_Income,
 ```  
    
    
-## Mapping NYC    
+## 6. Mapping NYC    
 In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data2'}
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
@@ -568,7 +568,7 @@ points(round((1-zcta$White_Total/zcta$Total_Pop)*100,1),
 ```   
 
 
-## Exploration Workspace  
+## 7. Exploration Workspace  
 Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?  
 \newline  
 \newline  
