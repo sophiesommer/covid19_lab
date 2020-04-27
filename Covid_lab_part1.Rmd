@@ -304,6 +304,12 @@ inc_propwhite
   
 Bonus: we could take a closer look at what's going on here by plotting the positive case rate against median income and color coding by the three categories that we created for proportion of white residents (you might notice that there is a much wider range of median incomes among the zip codes with a high proportion of white residents):  
 ```{r twoway2, exercise=TRUE, exercise.setup = 'load-data'}
+dat <- zcta %>% 
+  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3))
+
 plot(dat$Med_Income, 
      dat$Positive/dat$Total_Pop*100, 
      col=dat$White_Prop_Lev+3,
