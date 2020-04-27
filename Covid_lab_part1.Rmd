@@ -106,7 +106,7 @@ zcta <- zcta[!duplicated(zcta$MODZCTA),]
 
 ```
   
-## 1. The Data 
+## The Data: A summary 
 In this lab, you will inspect and interact with some datasets that habe been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
 
 + zcta - data by zip code (zipcode tabulation area),
@@ -114,7 +114,7 @@ In this lab, you will inspect and interact with some datasets that habe been com
 + NYC_zips - a shape file used only for plotting maps of nyc zip codes 
 
 
-## 2. Inspecting the data  
+## Inspecting the data  
 
 ### Exercise: Print the first few rows
 
@@ -178,7 +178,7 @@ head(zcta$Total_EducPop)
   
 Note that the values in this column are smaller than the Population (equals Race_Total) columns. Looking at the documentation provided by the Census for this group of variables, it turns out the variables we were examining (college education) are recorded only for people over the age of 25.  So the moral of the story is, don't always trust the names of the variables created by someone else (in this case, us)!  
 
-## 3. Case Rates by Zip Code 
+## Case Rates by Zip Code 
 
 This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities)
   
@@ -232,7 +232,7 @@ plot(zcta$Total/zcta$Total_Pop*100,
 It seems like, for zip codes where more than 2.5% of the population is being tested, the positive test rate does decrease as the testing rate increases; however, the lowest positive test rates are still occuring in the zip codes with the lowest testing rates. That's all we'll say about this here, but please feel free to investigate further! The main take-away for now is that your denominator matters.  
   
 
-## 4. Tables by race and income  
+## Tables by race and income  
 
 Race is a complex subject and, in fact, race has many categorizations in the ACS dataset. A simplifying step, if we are intersted in associations between race and COVID-19 outcomes, is to compare one category against all the others. You could choose any race (e.g., proportions of non-Hispanic Asian are in the column NH_Asian). But we will concentrate on total population white, since a lot of the conversation around racial disparities centers on the degree to which a white majority is associated with privilege. 
 
@@ -405,231 +405,18 @@ propwhite2
   
   
   
-## 5. Scatter Plots: Race/Income   
-We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
-```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$White_Total/zcta$Total_Pop*100,
-     round(zcta$Positive/zcta$Total_Pop*1000,1), 
-     xlab="percent white", 
-     ylab="pos cases per 1000 ppl", 
-     pch=16)
-```
+## Scatter Plots: Race/Income   
   
-Next, we do the same for positive case rate vs. income:  
-```{r scatter2, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Med_Income,
-     round(zcta$Positive/zcta$Total_Pop*1000,1), 
-     xlab="median income", 
-     ylab="pos cases per 1000 ppl", 
-     pch=16)
-```
-  
-And finally, percent white vs. median income:  
-```{r scatter3, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Med_Income,
-     zcta$White_Total/zcta$Total_Pop*100, 
-     xlab="median income", 
-     ylab="percent white", 
-     pch=16)
-```  
+Coming soon!
    
    
-## 6. Mapping NYC    
-In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
-```{r map1, exercise=TRUE, exercise.setup = 'load-data2'}
-getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
-  if(length(nbreaks) == 1) {
-    mybreaks <- c(-1, quantile(data,
-                               probs = seq(0, 1, length.out=nbreaks+1),
-                               na.rm = T))
-  } else {
-    mybreaks <- c(-1,nbreaks)
-  }
-  if(!is.null(mycolors)){
-    mycols <- mycolors
-  } else {
-    mycols <- rgb(rdgrbl[1],rdgrbl[2],rdgrbl[3],
-                  seq(0.05,max_opac, length.out = length(mybreaks)-1))
-  }
-  mycols[1] <- missingcol
-  data[is.na(data)] <- -.1
-  mycolorscheme <- cut(data, mybreaks) %>%
-    as.numeric()
-  mycolorscheme <- mycols[mycolorscheme]
-  levs <- levels(cut(data, mybreaks))
-  levs[1] <- "No Data"
-  return(list(mycolorscheme, levs, mycols))
-}
-``` 
-   
-Let's first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we'll divide the case rates into quintiles in order to match the map published by the Furman Center.   
-```{r map2, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
-                          5, 
-                          "white", 
-                          mycolors=viridis(6))
-
-plot(NYC_zips, col = col_lev[[1]], 
-     main = "Positive Tests Per 1000 People by Zip Code", 
-     cex = 10, lwd=0.01)
-
-legend("topleft", 
-       legend = col_lev[[2]], 
-       fill = col_lev[[3]], 
-       cex = 0.8, 
-       title = "Positive Tests per 1000 People")
-```   
-
+## Mapping NYC    
   
-Next, we could plot the same map but change the colors so that they reflect the proportion of the population that is non-white.  
-```{r map3, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
-                          5, 
-                          "white", 
-                          mycolors=viridis(6))
-
-plot(NYC_zips, col = col_lev[[1]], 
-     main = "Percent of Population that is Non-White", 
-     cex = 10, lwd=0.01)
-
-legend("topleft", 
-       legend = col_lev[[2]], 
-       fill = col_lev[[3]], 
-       cex = 0.8, 
-       title = "% Non-White")
-```    
-  
-An open-ended question about trying to visualize these two things on a plot simultaneously: Suppose that we wanted to see how well the two maps above "line up" (without scrolling back and forth between them). Here's one way we might try to do that (although maybe there are better ways.. or maybe this is an ill-advised endeavor altogether): We can plot the case rate quintile as increasingly dark shades of transparant blue, and the proportion non-white as increasingly dark shades of transparant red. Finally, we can overlay the maps, one on top of the other. Then any zip code with similar levels of these two variables will appear purple, while zip codes with a high-level of one variable, but not the other, will appear red or blue.   
-
-```{r map4, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
-                           5, 
-                           rdgrbl = c(0,0,1))
-col_lev2 <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
-                           5, 
-                           rdgrbl = c(1,0,0))
-
-par(mfrow=c(1,3))
-plot(NYC_zips, col = col_lev1[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01)
-legend("topleft", 
-       legend = col_lev1[[2]], 
-       fill = col_lev1[[3]], 
-       cex = 0.8, 
-       title = "Pos Tests per 1000")
-
-plot(NYC_zips, col = col_lev2[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01)
-legend("topleft", 
-       legend = col_lev2[[2]], 
-       fill = col_lev2[[3]], 
-       cex = 0.8, 
-       title = "% Non-White")
+Coming soon!
 
 
-plot(NYC_zips, col = col_lev2[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01)
-plot(NYC_zips, col = col_lev1[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01, add=T)
-```   
-   
-   
-We can also look at that plot more up close, and combine it with a scatter plot, which might make the picture a little clearer (note the purple dots in the scatter plot fall closer to the imaginary line you might draw through all the points; more scattered points are more red or blue):  
-```{r map5, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
-                           5, 
-                           rdgrbl = c(0,0,1))
-col_lev2 <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
-                           5, 
-                           rdgrbl = c(1,0,0))
-
-par(mfrow=c(1,2))
-plot(NYC_zips, col = col_lev2[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01)
-plot(NYC_zips, col = col_lev1[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01, add=T)
-
-plot(round((1-zcta$White_Total/zcta$Total_Pop)*100,1),
-     round(zcta$Positive/zcta$Total_Pop*1000,1),
-     col = col_lev2[[1]],
-     main = "",
-     xlab = "Proportion Non-White",
-     ylab = "Pos Cases per 1000 Ppl",
-     pch = 16)
-points(round((1-zcta$White_Total/zcta$Total_Pop)*100,1),
-       round(zcta$Positive/zcta$Total_Pop*1000,1),
-       col = col_lev1[[1]],
-       pch = 16)
-```   
-
-
-## 7. Exploration Workspace  
-Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?  
-\newline  
-\newline  
-### Code to examine the data  
-```{r practice1, exercise=TRUE, exercise.setup = 'load-data'}
-str(zcta)  
-```   
-  
-### Code to construct a 1-way table   
-```{r practice2, exercise=TRUE, exercise.setup = 'load-data'}
-inc <- zcta %>% 
-  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
-  group_by(Med_Inc_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2))
-inc <- inc[-nrow(inc),]
-inc
-```  
-
-### Code to construct a 2-way table of case rates  
-```{r practice3, exercise=TRUE, exercise.setup = 'load-data'}
-inc_propwhite <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
-  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
-  mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
-  group_by(White_Prop_Lev, Med_Inc_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2)) %>%
-  spread(White_Prop_Lev, Cases_per_1000, fill=0)
-inc_propwhite <- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
-inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
-colnames(inc_propwhite) <- c(NA, "Low Prop White", "Med Prop White", "High Prop White")
-inc_propwhite
-```    
-
-### Code to construct a scatter plot   
-```{r practice4, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Med_Income,
-     round(zcta$Positive/zcta$Total_Pop*1000,1), 
-     xlab="median income", 
-     ylab="pos cases per 1000 ppl", 
-     pch=16)
-```    
-  
-### Code construct a map  
-```{r practice5, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
-                          5, 
-                          "white", 
-                          rdgrbl = c(0,1,0),
-                          max_opac = 0.7)
-
-plot(NYC_zips, col = col_lev[[1]], 
-     main = "Positive Tests Per 1000 People by Zip Code", 
-     cex = 10, lwd=0.01)
-
-legend("topleft", 
-       legend = col_lev[[2]], 
-       fill = col_lev[[3]], 
-       cex = 0.8, 
-       title = "Positive Tests per 1000 People")
-```
+## Exploration Workspace  
+Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. More example code to work with is coming soon!
    
 ### Empty workspace for you!  
 
