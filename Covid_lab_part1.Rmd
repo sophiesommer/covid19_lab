@@ -180,7 +180,7 @@ Note that the values in this column are smaller than the Population (equals Race
 
 ## Case Rates by Zip Code 
 
-This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities)
+This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities).
   
 ```{r pop4, exercise=TRUE, exercise.setup = 'load-data'}
 #5 highest
@@ -284,7 +284,7 @@ Question: based on the code that we used, are we "weighing" each zipcode by its 
 
 Let's now try to reproduce a 2-way table, looking simultaneously at the variables of race and income. To make a two way table, of course we need to create the two groupings (proportion-white and median-income) as before. Now when we use the `group_by` function, we include both variables.
 
-We notice something kind of interesting. It seems like case rates don't vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.    
+We notice something kind of interesting. Notice that, among zip-codes with the lowest proportion of white residents, case rates are higher in zip codes with higher incomes, white the reverse is true for zip codes with a medium or high proportion of white residents.      
 ```{r twoway, exercise=TRUE, exercise.setup = 'load-data'}
 inc_propwhite <- zcta %>% 
   select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
@@ -300,11 +300,24 @@ inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
 colnames(inc_propwhite) <- c("inc/race","Low Prop White", "Med Prop White", "High Prop White")
 inc_propwhite
 ```
-
-
-```{r twoway-solution}
-
+  
+  
+Bonus: we could take a closer look at what's going on here by plotting the positive case rate against median income and color coding by the three categories that we created for proportion of white residents (you might notice that there is a much wider range of median incomes among the zip codes with a high proportion of white residents):  
+```{r twoway2, exercise=TRUE, exercise.setup = 'load-data'}
+plot(dat$Med_Income, 
+     dat$Positive/dat$Total_Pop*100, 
+     col=dat$White_Prop_Lev+3,
+     xlab = "Median Income",
+     ylab = "Case Rate",
+     pch = 16)
+legend("topright",
+       col = c(4,5,6),
+       pch = 16,
+       legend = c("Low Prop White",
+                  "Med Prop White",
+                  "High Prop White"))
 ```
+  
 
 ### Slicing the same data differently
   
