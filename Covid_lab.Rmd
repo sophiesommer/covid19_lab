@@ -587,7 +587,7 @@ points(round(zcta$Bach_plus_prop,1),
        pch = 16)
 ```   
   
-If we want to now see what this looks like when the maps DO line up (hot spots in one match up with hot spots in the other, generating more purple), we can use a little trick: Instead of looking at the proportion of people WITH a college degree in each zip code, we can calculate the proportion of people WITHOUT a college degree (exercise: how would you calculate this?). Here is some code to reproduce the map and scatter plot above to make use of this trick:  
+If we want to now see what this looks like when the maps DO line up (hot spots in one match up with hot spots in the other, generating more purple), we can use a little trick: Instead of looking at the proportion of people WITH a college degree in each zip code, we can calculate the proportion of people WITHOUT a college degree (exercise: how would you calculate this?). Here is some code to reproduce the map and scatter plot above to make use of this trick. We now see a more purple-colored map and a positive association between the two variables.    
 ```{r map6, exercise=TRUE, exercise.setup = 'load-data2'}
 col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                            5, 
