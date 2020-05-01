@@ -220,16 +220,28 @@ zcta %>%
   head(5)
 ```
      
-Once you do this, you'll see that it does make a difference in which zip codes appear (although we still see a similar relationship between case rate and income). If you look at the data on a broader scale, the percent of tests that come back positive decreases as the number of tests administered increases. Therefore, we could imagine a situation where wealthy areas have more access to tests, leading to a lower positive test rate (relative to other areas) but a higher rate of positive tests relative to the whole population (because more positive cases are found). If curious, we could plot the positive test rate as a function of the testing rate:     
+Once you do this, you'll see that it does make a difference in which zip codes appear (although we still see a similar relationship between case rate and income). If you look at the data on a broader scale, the percent of tests that come back positive decreases as the number of tests administered increases. Therefore, we could imagine a situation where wealthy areas have more access to tests, leading to a lower positive test rate (relative to other areas) but a high rate of positive cases relative to the whole population (because more positive cases are found). 
+
+To see this, we can plot both the positive test rate and the positive case rate as a function of the overall testing rate:   
+
+
 ```{r pop6, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$Total/zcta$Total_Pop*100, 
      zcta$zcta_cum.perc_pos,
      xlab = "percent of population tested",
-     ylab = "positive test rate",
+     ylab = "positive TEST rate",
      main = "")
 ```
   
-It seems like, for zip codes where more than 2.5% of the population is being tested, the positive test rate does decrease as the testing rate increases; however, the lowest positive test rates are still occuring in the zip codes with the lowest testing rates. That's all we'll say about this here, but please feel free to investigate further! The main take-away for now is that your denominator matters.  
+```{r pop7, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$Total/zcta$Total_Pop*100, 
+     zcta$Positive/zcta$Total_Pop*100,
+     xlab = "percent of population tested",
+     ylab = "positive CASE rate",
+     main = "")
+```
+
+It seems like, for zip codes where more than 3% of the population is being tested, the positive test rate does decrease as the testing rate increases; however, the lowest positive test rates are still occuring in the zip codes with the lowest testing rates. That's all we'll say about this here, but please feel free to investigate further! The main take-away for now is that your denominator matters.  
   
 
 ## Tables by race and income  
@@ -382,12 +394,12 @@ abline(v=thresholdValue, lwd=2, col="blue")
 sum(simvals>=thresholdValue)/1000
 ```
   
-We note that only about `r 100*sum(simvals>=thresholdValue)/1000`% of our simulated values were greater than `r thresholdValue`. It's therefore very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists (there are many theories that have been proposed).   
+We note that `r 100*sum(simvals>=thresholdValue)/1000`% of our simulated values were greater than `r thresholdValue`. It's therefore very unlikely that we would have observed this large of a value by random chance (if the truth was that there was no relationship between the proportion of the population that is white and the case rate). However, this cannot tell us WHY this relationship exists (there are many theories that have been proposed).   
 
 
 ### A quick side note:   
 
-Another thing to take a look at: you may have noticed that we split case rate and proportion white into only two equally sized categories above. Here is the code again (except the code to specify the row and column names was taken out for now; see how to replace it in the "solution"). See if you can change the code to split the zip codes into 3, or even 4 categories. Do you notice a different pattern?  
+Another thing to take a look at: you may have noticed that we split case rate and proportion white into only two equally sized categories above. Here is the code again (except the code to specify the row and column names was taken out for now; see how to replace it in the "solution"). See if you can change the code to split the zip codes into 3, or even 4 categories. Do you notice a different pattern?  (Hint: if you have more than 2 categories, but only two labels for your row and column names, you will get an error!)
 ```{r oneway_race3, exercise=TRUE, exercise.setup = 'load-data'}
 propwhite2 <- zcta %>% 
   mutate(White_Prop = round(White_Total/Race_Total*100, 2)) %>%
@@ -399,6 +411,7 @@ propwhite2 <- zcta %>%
   summarise(N_Zips = n()) %>%
   spread(White_Prop_Lev, N_Zips, fill=0)
 
+# label the row and column names
 propwhite2[,1] <- c("Low Case Rate", "High Case Rate")
 colnames(propwhite2) <- c("case/race", "Low Prop White", "High Prop White")
 
@@ -416,6 +429,8 @@ propwhite2 <- zcta %>%
   group_by(White_Prop_Lev, CaseRate_Lev) %>%
   summarise(N_Zips = n()) %>%
   spread(White_Prop_Lev, N_Zips, fill=0)
+
+# label the row and column names: 3 levels
 propwhite2[,1] <- c("Low Case Rate", "Medium Case Rate", "High Case Rate")
 colnames(propwhite2) <- c("case/race", "Low Prop White", "Medium Prop White", "High Prop White")
 
@@ -424,71 +439,79 @@ propwhite2
   
   
   
-## 5. Scatter Plots   
-Let's begin by taking a closer look at some of the scatter plots from earlier sections. For example, we looked at this plot in the "case rates by zip codes" section. The plot shows the positive test rate (positive tests/total tests) on the y-axis and the percent of the population tested (total tests/population). The purpose of this scatter plot was to try to understand by a positive test rate (positive tests/population) is different from a positive test rate (positive tests/total tests). The concern with using (positive tests/total tests) as an estimate for the positive case rate is that the number of tests that are performed in any given zip code might be related to the positive test rate itself (the theory is: if only a few tests are done, then the sickest people will be taking those tests and a higher proportion will be positive; meanwhile, if tests are widely available and anyone can get tested, then the proportion of tests that are positive will be lower). We examine this relationship again below:      
-```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Total/zcta$Total_Pop*100, 
-     zcta$zcta_cum.perc_pos,
-     xlab = "percent of population tested",
-     ylab = "positive test rate",
-     main = "")
-```
+## Scatter Plots   
+Let's begin by taking a closer look at some of the scatter plots from earlier sections. For example, we looked at this plot in the "case rates by zip codes" section. The plot shows the positive test rate (positive tests/total tests) on the y-axis and the percent of the population tested (total tests/population).
    
-We see that, up to a testing rate of about 2.5%, the positive test rate seems to increase with increased testing; however, it then starts to level out and even decrease with higher testing rates. We could see this pattern even more clearly by adding a sort of smoothing function to the plot. The red line roughly follows the "center" of the data, allowing us to see that increasing and decreasing trend more clearly:  
+```{r scatter1, ref.label="pop6", exercise=FALSE, exercise.setup = 'load-data'}
+```
+
+
+Recall that we first saw this scatter plot while considering how the *positive case rate* (positive tests/population) is different from a *positive test rate* (positive tests/total tests). In particular, the rank-order of zip code neighborhoods is different depending on which measure we use.
+
+Below we produce two scatterplots side by side, and this time we can add a smoothing curve to highlight the trends.
+
 ```{r scatter_smooth1, exercise=TRUE, exercise.setup = 'load-data'}
+par(mfrow=c(1,2))
 scatter.smooth(zcta$Total/zcta$Total_Pop*100, 
                zcta$zcta_cum.perc_pos,
-               xlab = "percent of population tested",
-               ylab = "positive test rate",
+               span = 0.75,
+               xlab = "% of population tested",
+               ylab = "positive TEST rate",
                main = "",
                lpars = list(col = "red", lwd = 3))
+
+scatter.smooth(zcta$Total/zcta$Total_Pop*100, 
+               zcta$Positive/zcta$Total_Pop*100,
+               span = 0.75,
+               xlab = "% of population tested",
+               ylab = "positive CASE rate",
+               main = "",
+               lpars = list(col = "red", lwd = 3))
+
 ```
   
-
-We now turn to a scatter plot from the "tables by race and income" section. In this plot, we saw an overall negative association between case rates and median income (by negative association, we mean that as one variable goes up, the other goes down; in this case, as median income increases, we expect the case rate to decrease). However, we saw that splitting the zip codes based on the proportion of the population that is white creates a sort of paradox: among the zip codes with the lowest proportion of white residents (the darkest blue dots in the plot), there is actually a positive association between median income and case rate (by that I mean: if you only look at the dark blue dots, then it would appear that higher median incomes are actually associated with higher case rates).   
-```{r scatter2, exercise=TRUE, exercise.setup = 'load-data'}
-dat <- zcta %>% 
-  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
-  na.omit() %>%
-  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
-  mutate(White_Prop_Lev = ntile(White_Prop, 3))
-
-plot(dat$Med_Income, 
-     dat$Positive/dat$Total_Pop*100, 
-     col=dat$White_Prop_Lev+3,
-     xlab = "Median Income",
-     ylab = "Case Rate",
-     pch = 16)
-legend("topright",
-       col = c(4,5,6),
-       pch = 16,
-       legend = c("Low Prop White",
-                  "Med Prop White",
-                  "High Prop White"))
-```
   
-Another way to think about this: if you drew a line through all the data, it would go from the top left to bottom right (we call this a "negative slope"); however, a line through those dark blue dots would now go from the lower left to upper right (a positive slope). Let's actually draw those lines on the plot (the black line is the "best-fit" line for all the data, while the blue line is the best fit for the blue dots only):  
+The red line roughly follows the "center" of the data, allowing us to see that increasing and decreasing trend in the test rate more clearly. The case rate does not decrease, although it does start to level off a bit. As it must. The larger our sampling proportion for testing, the closer we get to the true  proportion of positive cases.
+
+However, as you can see clearly from the scatter plots, the highest-ranked zipcodes by test rate are those with testing rates around 3%. In contrast, the zip codes with the highest case rate are those that tested the most.
+
+In neither case can we say that the sample of people tested is representative of the population. First of all, the sickest people are the first ones to get tested. When tests were not widely available, they were also limited to essential workers. This could raise the rate of testing in neighborhoods where those workers live. On the other hand, wealthier people might have  access to testing in private labs, which could raise the rate of testing in wealthier neighborhoods.
+  
+### More revelations using scatterplots 
+
+We now revisit another scatter plot from the "tables by race and income" section. 
+
+```{r scatter2, ref.label="twoway2", exercise=FALSE}
+```
+
+In this plot, we see an overall negative association between case rates and median income. By negative association, we mean that as one variable goes up, the other goes down; in this case, as median income increases, we the case rate tends to decrease. 
+
+However, we also saw from our two-way table that, when we split the zip codes into groups based on proportion white, this relationship between income and case rate varies within groups. Among the zip codes with the lowest proportion of white residents (the darkest blue dots in the plot), there is actually a positive association between median income and case rate. If you look only at the dark blue dots, then it would appear that higher median incomes are actually associated with higher case rates.
+
+To recap: if you drew a line through all the data, it would have a negative slope. However, a line through those dark blue dots would now go from the lower left to upper right (a positive slope). 
+
+Let's actually draw those lines on the plot. The blue and purple lines are smooth curves based only the points with the same color:  
+
 ```{r scatter-smooth2, exercise=TRUE, exercise.setup = 'load-data'}
 dat <- zcta %>% 
   select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
   na.omit() %>%
   mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
-  mutate(White_Prop_Lev = ntile(White_Prop, 3))
+  mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
+  mutate(Pos_Case_Rate = Positive/Total_Pop*100)
 
 plot(dat$Med_Income, 
-     dat$Positive/dat$Total_Pop*100, 
+     dat$Pos_Case_Rate, 
      col=dat$White_Prop_Lev+3,
      xlab = "Median Income",
      ylab = "Case Rate",
      pch = 16)
 
-abline(lm(I(Positive/Total_Pop*100)~Med_Income,
-          data = dat), 
-       lwd = 2)
-abline(lm(I(Positive/Total_Pop*100)~Med_Income,
-          data = dat, 
-          subset = (White_Prop_Lev == 1)),
-       lwd = 2, col = 4)
+lines(loess.smooth(dat[dat$White_Prop_Lev==1,"Med_Income"],
+                   dat[dat$White_Prop_Lev==1,"Pos_Case_Rate"], span=3), col=4, lwd=2)
+lines(loess.smooth(dat[dat$White_Prop_Lev==3,"Med_Income"],
+                   dat[dat$White_Prop_Lev==3,"Pos_Case_Rate"], span=3), col=6, lwd=2)
+
 
 legend("topright",
        col = c(4,5,6),
@@ -498,57 +521,73 @@ legend("topright",
                   "High Prop White"))
 ```  
   
-Now that we've seen how scatter plots can be helpful visualizations when we want to better understand fine-grain relationships between variables, let's use some scatter plots to re-examine the relationship between the racial composition of a given zip code and the case rate. We saw in a previous section that there appears to be some relationship between the positive case rate and proportion of the population that identifies as white by zip code. We can visualize this relationship on a scatter plot by representing each zip code as a dot and plotting the positive case rate against the proportion of the population that is white. By adding a best fit line in blue, we can see a slight negative association between these variables.    
-```{r scatter3, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$White_Total/zcta$Total_Pop*100,
-     round(zcta$Positive/zcta$Total_Pop*1000,1), 
-     xlab="percent white", 
-     ylab="pos cases per 1000 ppl", 
-     pch=16)
-x <- zcta$White_Total/zcta$Total_Pop*100
-y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
-abline(lm(y~x), lwd = 3, col =4)
-```
-   
-We can repeat the same analysis looking at the proportion of the population that is black or hispanic. Data from NYC has shown that black and hispanic communities are experiencing higher rates of covid infection and mortality; therefore, we expect to see a positive association this time (and we do).  
+
+Now that we've seen how scatter plots can be helpful visualizations when we want to better understand fine-grained relationships between variables, let's use some scatter plots to re-examine the relationship between the racial composition of a given zip code and the case rate. 
+
+We saw previously that there appears to be a negative association between the positive case rate and proportion of the population that identifies as white by zip code. Let us shift our attention to the black and Hispanic population. Reports using data from NYC have shown that black and Hispanic communities are experiencing higher rates of covid infection and mortality; therefore, we expect to see a positive association this time.  
+
+We can visualize this relationship on a scatter plot by representing each zip code as a dot and plotting the positive case rate against the proportion of the population that is black of Hispanic By adding a smoothing line in blue, we can see a positive association between these variables.   
+
 ```{r scatter3_bh, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$NH_Black+zcta$Hisp,
+scatter.smooth(zcta$NH_Black+zcta$Hisp,
      round(zcta$Positive/zcta$Total_Pop*1000,1), 
-     xlab="percent black + hispanic", 
+     xlab="percent black + Hispanic", 
      ylab="pos cases per 1000 ppl", 
+     span=3, lpars=list(lwd=3, col="blue"),
      pch=16)
-x <- zcta$NH_Black+zcta$Hisp
-y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
-abline(lm(y~x), lwd = 3, col =4)
+
 ```
   
-One possible mediator for these racial disparities is income. Some have speculated that differences in case rates by race could be "explained" by income inequality among different racial groups (i.e., communities with a higher proportion of black and hispanic residents may also be communities with lower median income, and it's possible that residents of lower income communities are more likely to get covid-19). To explore whether this is a possible explanation for the observed racial disparities, let's first look at the relationship between median income and case rate. We see (as expected) that there is a negative association between median income and case rates by zip code.    
+Some possible mediators for these racial disparities are income level and, related to income, level of educational attainment. Some have speculated that differences in case rates by race could be "explained" by income and education inequality among different racial groups. If true, this would not mean that varying outcomes are fair, because they are not directly race-based. The difference in health outcomes would still be indirectly race-based. But whereas policy cannot change the racial composition of a neighborhood, it can be directed to improve educational attainment and wealth. Thus, these mediators are levers for change.
+
+To explore whether income and education variables can explain the observed racial disparities, let's first look at the relationship between these variables and case rates. We see that there are negative associations for both median income and college education with case rates.
+
 ```{r scatter4, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Med_Income,
+par(mfrow=c(1,2))
+scatter.smooth(zcta$Med_Income,
      round(zcta$Positive/zcta$Total_Pop*1000,1), 
      xlab="median income", 
      ylab="pos cases per 1000 ppl", 
+     span=3, lpars=list(lwd=3, col="blue"),
      pch=16)
-x <- zcta$Med_Income
-y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
-abline(lm(y~x), lwd = 3, col =4)
+
+scatter.smooth(zcta$Bach_plus_prop,
+     round(zcta$Positive/zcta$Total_Pop*1000,1), 
+     xlab="share of college degree", 
+     ylab="pos cases per 1000 ppl", 
+     span=3, lpars=list(lwd=3, col="blue"),
+     pch=16)
+
 ```
   
-Finally, we can look at the relationship between income and the racial composition of zip codes. For now, we'll look at the proportion of the population that is black or hispanic. This time, we see that zip codes with a higher median income tend to have a lower proportion of black and hispanic residents:  
+Finally, we can look at the relationship between income and educational outcomes with the racial composition of zip codes. This time, we see that zip codes with a higher proportion of black and Hispanic residents tend to have lower incomes and college attainment. 
+
 ```{r scatter5, exercise=TRUE, exercise.setup = 'load-data'}
-plot(zcta$Med_Income,
+
+par(mfrow=c(1,2))
+scatter.smooth(
      zcta$NH_Black+zcta$Hisp, 
-     xlab="median income", 
-     ylab="percent black + hispanic", 
+     zcta$Med_Income,
+     xlab="% black or Hispanic", 
+     ylab="median income", 
+     span=3, lpars=list(lwd=3, col="blue"),
      pch=16)
-x <- zcta$Med_Income
-y <- zcta$NH_Black+zcta$Hisp
-abline(lm(y~x), lwd = 3, col =4)
+
+scatter.smooth(
+     zcta$NH_Black+zcta$Hisp, 
+     zcta$Bach_plus_prop,
+     xlab="% black or Hispanic", 
+     ylab="share of college degree", 
+     span=3, lpars=list(lwd=3, col="blue"),
+     pch=16)
+
+
 ```  
    
-This all provides some evidence that income inequality may be mediating some of the racial disparities with regard to case rate.  
+This all provides some suggestive evidence that education and income inequality may be mediating some of the racial disparities with regard to case rate. There are more advanced methods of data science (e.g., multiple regression, mediation analysis) to dive deeper into the explanation of racial disparities. But you will need to take a next course to master those!
    
-## 6. Mapping NYC    
+   
+## Mapping NYC    
 In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data2'}
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
@@ -712,7 +751,7 @@ points((100-zcta$Bach_plus_prop),
        pch = 16)
 ```   
 
-## 7. Exploration Workspace  
+## Exploration Workspace  
 Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?  
 \newline  
 \newline  
