@@ -462,7 +462,7 @@ getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1)
 }
 ``` 
    
-Let's first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we'll divide the case rates into quintiles in order to match the map published by the Furman Center.   
+Let's first use this function to get a map of zip codes where the color of each zip code is related to the positive case rate. For now, we'll divide the case rates into quintiles in order to match the map published by the Furman Center (https://furmancenter.org/thestoop/entry/covid-19-cases-in-new-york-city-a-neighborhood-level-analysis).   
 ```{r map2, exercise=TRUE, exercise.setup = 'load-data2'}
 col_lev <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                           5, 
@@ -481,15 +481,16 @@ legend("topleft",
 ```   
 
   
-Next, we could plot the same map but change the colors so that they reflect the proportion of the population that is non-white.  
+Next, remember the ABC News article that printed a map of zip codes by the proportion of residents with a college degree (article here: https://abcnews.go.com/Health/nyc-stark-contrast-covid-19-infection-rates-based/story?id=69920706)? Let's see if we can reproduce that map. (A note about colors: In the function to get the color scheme -- which is printed above -- there's an input called rdgrbl which allows me to change the color scheme of the map. In the first map, I actually used a built in color scheme called "viridis", which I chose to match the colors in the Furman Center map. This time, I'll use shades of blue to match the ABC News map. The rdgrbl input passes information to the rgb function in R. Basically, you can input three numbers -- 0s or 1s -- corresponding to the colors red, green, and blue, in that order. So blue is represented by the numbers 0,0,1).      
 ```{r map3, exercise=TRUE, exercise.setup = 'load-data2'}
-col_lev <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
+col_lev <- getShapeColors(zcta$Bach_plus_prop, 
                           5, 
                           "white", 
-                          mycolors=viridis(6))
+                          rdgrbl=c(0,0,1),
+                          max_opac = .8)
 
 plot(NYC_zips, col = col_lev[[1]], 
-     main = "Percent of Population that is Non-White", 
+     main = "Percent of Population with a College Degree", 
      cex = 10, lwd=0.01)
 
 legend("topleft", 
@@ -499,15 +500,15 @@ legend("topleft",
        title = "% Non-White")
 ```    
   
-An open-ended question about trying to visualize these two things on a plot simultaneously: Suppose that we wanted to see how well the two maps above "line up" (without scrolling back and forth between them). Here's one way we might try to do that (although maybe there are better ways.. or maybe this is an ill-advised endeavor altogether): We can plot the case rate quintile as increasingly dark shades of transparant blue, and the proportion non-white as increasingly dark shades of transparant red. Finally, we can overlay the maps, one on top of the other. Then any zip code with similar levels of these two variables will appear purple, while zip codes with a high-level of one variable, but not the other, will appear red or blue.   
+An open-ended question about trying to visualize these two things on a plot simultaneously: Suppose that we wanted to see how well the two maps above "line up" (without scrolling back and forth between them). Here's one way we might try to do that (although maybe there are better ways.. or maybe this is an ill-advised endeavor altogether): We can plot the case rate quintile as increasingly dark shades of transparant red, and the proportion with a college degree as increasingly dark shades of transparant blue. Finally, we can overlay the maps, one on top of the other. Then any zip code with similar levels of these two variables will appear purple, while zip codes with a high-level of one variable, but not the other, will appear more clearly red or blue. Because the "hot" areas of these two maps do not line up that well, we expect a red/blue map as opposed to a purple one.     
 
 ```{r map4, exercise=TRUE, exercise.setup = 'load-data2'}
 col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                            5, 
-                           rdgrbl = c(0,0,1))
-col_lev2 <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
-                           5, 
                            rdgrbl = c(1,0,0))
+col_lev2 <- getShapeColors(zcta$Bach_plus_prop, 
+                           5, 
+                           rdgrbl = c(0,0,1))
 
 par(mfrow=c(1,3))
 plot(NYC_zips, col = col_lev1[[1]], 
@@ -526,48 +527,76 @@ legend("topleft",
        legend = col_lev2[[2]], 
        fill = col_lev2[[3]], 
        cex = 0.8, 
-       title = "% Non-White")
+       title = "% College Deg")
 
-
-plot(NYC_zips, col = col_lev2[[1]], 
-     main = "", 
-     cex = 10, lwd=0.01)
 plot(NYC_zips, col = col_lev1[[1]], 
      main = "", 
-     cex = 10, lwd=0.01, add=T)
+     cex = 10, lwd=0.01)
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01, add = T)
 ```   
    
    
-We can also look at that plot more up close, and combine it with a scatter plot, which might make the picture a little clearer (note the purple dots in the scatter plot fall closer to the imaginary line you might draw through all the points; more scattered points are more red or blue):  
+We can also look at that plot more up close, and combine it with a scatter plot, which might make the picture a little clearer (note that the red and the blue zones don't really overlap, and most of the points in the scatter plot -- which each represent a zip code -- are either blue or red):  
 ```{r map5, exercise=TRUE, exercise.setup = 'load-data2'}
 col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                            5, 
-                           rdgrbl = c(0,0,1))
-col_lev2 <- getShapeColors(round((1-zcta$White_Total/zcta$Total_Pop)*100,1), 
-                           5, 
                            rdgrbl = c(1,0,0))
+col_lev2 <- getShapeColors(zcta$Bach_plus_prop, 
+                           5, 
+                           rdgrbl = c(0,0,1))
 
 par(mfrow=c(1,2))
-plot(NYC_zips, col = col_lev2[[1]], 
+plot(NYC_zips, col = col_lev1[[1]], 
      main = "", 
      cex = 10, lwd=0.01)
-plot(NYC_zips, col = col_lev1[[1]], 
+plot(NYC_zips, col = col_lev2[[1]], 
      main = "", 
      cex = 10, lwd=0.01, add=T)
 
-plot(round((1-zcta$White_Total/zcta$Total_Pop)*100,1),
+plot(zcta$Bach_plus_prop,
      round(zcta$Positive/zcta$Total_Pop*1000,1),
-     col = col_lev2[[1]],
+     col = col_lev1[[1]],
      main = "",
-     xlab = "Proportion Non-White",
+     xlab = "Proportion College Degree",
      ylab = "Pos Cases per 1000 Ppl",
      pch = 16)
-points(round((1-zcta$White_Total/zcta$Total_Pop)*100,1),
+points(round(zcta$Bach_plus_prop,1),
        round(zcta$Positive/zcta$Total_Pop*1000,1),
-       col = col_lev1[[1]],
+       col = col_lev2[[1]],
        pch = 16)
 ```   
+  
+If we want to now see what this looks like when the maps DO line up (hot spots in one match up with hot spots in the other, generating more purple), we can use a little trick: Instead of looking at the proportion of people WITH a college degree in each zip code, we can calculate the proportion of people WITHOUT a college degree (exercise: how would you calculate this?). Here is some code to reproduce the map and scatter plot above to make use of this trick:  
+```{r map6, exercise=TRUE, exercise.setup = 'load-data2'}
+col_lev1 <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
+                           5, 
+                           rdgrbl = c(1,0,0))
+col_lev2 <- getShapeColors((100-zcta$Bach_plus_prop), 
+                           5, 
+                           rdgrbl = c(0,0,1))
 
+par(mfrow=c(1,2))
+plot(NYC_zips, col = col_lev1[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01)
+plot(NYC_zips, col = col_lev2[[1]], 
+     main = "", 
+     cex = 10, lwd=0.01, add=T)
+
+plot((100-zcta$Bach_plus_prop),
+     round(zcta$Positive/zcta$Total_Pop*1000,1),
+     col = col_lev1[[1]],
+     main = "",
+     xlab = "Proportion College Degree",
+     ylab = "Pos Cases per 1000 Ppl",
+     pch = 16)
+points((100-zcta$Bach_plus_prop),
+       round(zcta$Positive/zcta$Total_Pop*1000,1),
+       col = col_lev2[[1]],
+       pch = 16)
+```   
 
 ## 7. Exploration Workspace  
 Now that we've taken a look at some of these variables, this space is left to you for any additional questions you may want to ask. Some code has been copied for you here, which you can run and then alter, in order to address new questions. Questions to think about: What other variables could you look at that might be related to the positive case rate? How are these variables related to each other? How is the number of tests administered related to both the population and positive case rate?  
