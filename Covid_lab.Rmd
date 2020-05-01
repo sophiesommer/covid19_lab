@@ -726,23 +726,25 @@ str(zcta)
 inc <- zcta %>% 
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(Med_Inc_Lev) %>%
-  summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2))
-inc <- inc[-nrow(inc),]
+  summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2)) %>%
+  na.omit()
 inc
 ```  
 
 ### Code to construct a 2-way table of case rates  
 ```{r practice3, exercise=TRUE, exercise.setup = 'load-data'}
 inc_propwhite <- zcta %>% 
-  mutate(White_Prop = round((White_Total)/Race_Total), 2) %>%
+  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
   mutate(White_Prop_Lev = ntile(White_Prop, 3)) %>%
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(White_Prop_Lev, Med_Inc_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2)) %>%
   spread(White_Prop_Lev, Cases_per_1000, fill=0)
-inc_propwhite <- inc_propwhite[-nrow(inc_propwhite),-ncol(inc_propwhite)]
+
 inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
-colnames(inc_propwhite) <- c(NA, "Low Prop White", "Med Prop White", "High Prop White")
+colnames(inc_propwhite) <- c("inc/race","Low Prop White", "Med Prop White", "High Prop White")
 inc_propwhite
 ```    
 
@@ -760,8 +762,8 @@ plot(zcta$Med_Income,
 col_lev <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                           5, 
                           "white", 
-                          rdgrbl = c(0,1,0),
-                          max_opac = 0.7)
+                          rdgrbl = c(0,1,1),
+                          max_opac = 0.9)
 
 plot(NYC_zips, col = col_lev[[1]], 
      main = "Positive Tests Per 1000 People by Zip Code", 
@@ -774,8 +776,3 @@ legend("topleft",
        title = "Positive Tests per 1000 People")
 ```
    
-### Empty workspace for you!  
-
-```{r practice_blank, exercise=TRUE, exercise.setup = 'load-data'}
-
-```  
