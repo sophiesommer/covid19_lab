@@ -106,7 +106,7 @@ zcta <- zcta[!duplicated(zcta$MODZCTA),]
 
 ```
   
-## 1. The Data 
+## The Data: A summary 
 In this lab, you will inspect and interact with some datasets that habe been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
 
 + zcta - data by zip code (zipcode tabulation area),
@@ -114,7 +114,7 @@ In this lab, you will inspect and interact with some datasets that habe been com
 + NYC_zips - a shape file used only for plotting maps of nyc zip codes 
 
 
-## 2. Inspecting the data  
+## Inspecting the data  
 
 ### Exercise: Print the first few rows
 
@@ -178,9 +178,9 @@ head(zcta$Total_EducPop)
   
 Note that the values in this column are smaller than the Population (equals Race_Total) columns. Looking at the documentation provided by the Census for this group of variables, it turns out the variables we were examining (college education) are recorded only for people over the age of 25.  So the moral of the story is, don't always trust the names of the variables created by someone else (in this case, us)!  
 
-## 3. Case Rates by Zip Code 
+## Case Rates by Zip Code 
 
-This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities)
+This article from the intercept (https://theintercept.com/2020/04/09/nyc-coronavirus-deaths-race-economic-divide/) starts with two tables showing zip codes with the highest and lowest positive test rates. We can reproduce these tables using the code below (they look slightly different because our data is more recent than that used in the article and we are reporting median income rather than per-capita income). Nonetheless, they look fairly similar (and we see a similar pattern with respect to income disparities).
   
 ```{r pop4, exercise=TRUE, exercise.setup = 'load-data'}
 #5 highest
@@ -232,7 +232,7 @@ plot(zcta$Total/zcta$Total_Pop*100,
 It seems like, for zip codes where more than 2.5% of the population is being tested, the positive test rate does decrease as the testing rate increases; however, the lowest positive test rates are still occuring in the zip codes with the lowest testing rates. That's all we'll say about this here, but please feel free to investigate further! The main take-away for now is that your denominator matters.  
   
 
-## 4. Tables by race and income  
+## Tables by race and income  
 
 Race is a complex subject and, in fact, race has many categorizations in the ACS dataset. A simplifying step, if we are intersted in associations between race and COVID-19 outcomes, is to compare one category against all the others. You could choose any race (e.g., proportions of non-Hispanic Asian are in the column NH_Asian). But we will concentrate on total population white, since a lot of the conversation around racial disparities centers on the degree to which a white majority is associated with privilege. 
 
@@ -284,7 +284,7 @@ Question: based on the code that we used, are we "weighing" each zipcode by its 
 
 Let's now try to reproduce a 2-way table, looking simultaneously at the variables of race and income. To make a two way table, of course we need to create the two groupings (proportion-white and median-income) as before. Now when we use the `group_by` function, we include both variables.
 
-We notice something kind of interesting. It seems like case rates don't vary as much by income among zip codes with a low proportion of white people. Meanwhile, case rates vary a lot more by income among zip codes with a high proportion of white people.    
+We notice something kind of interesting. Notice that, among zip-codes with the lowest proportion of white residents, case rates are higher in zip codes with higher incomes, white the reverse is true for zip codes with a medium or high proportion of white residents.      
 ```{r twoway, exercise=TRUE, exercise.setup = 'load-data'}
 inc_propwhite <- zcta %>% 
   select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
@@ -300,11 +300,30 @@ inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
 colnames(inc_propwhite) <- c("inc/race","Low Prop White", "Med Prop White", "High Prop White")
 inc_propwhite
 ```
+  
+  
+Bonus: we could take a closer look at what's going on here by plotting the positive case rate against median income and color coding by the three categories that we created for proportion of white residents (you might notice that there is a much wider range of median incomes among the zip codes with a high proportion of white residents):  
+```{r twoway2, exercise=TRUE, exercise.setup = 'load-data'}
+dat <- zcta %>% 
+  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3))
 
-
-```{r twoway-solution}
-
+plot(dat$Med_Income, 
+     dat$Positive/dat$Total_Pop*100, 
+     col=dat$White_Prop_Lev+3,
+     xlab = "Median Income",
+     ylab = "Case Rate",
+     pch = 16)
+legend("topright",
+       col = c(4,5,6),
+       pch = 16,
+       legend = c("Low Prop White",
+                  "Med Prop White",
+                  "High Prop White"))
 ```
+  
 
 ### Slicing the same data differently
   
