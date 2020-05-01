@@ -424,34 +424,129 @@ propwhite2
   
   
   
-## 5. Scatter Plots: Race/Income   
-We can get a different, finer grain look at some of these relationships by looking at scatter plots. To start, we plot a scatter plot of the positive case rate as a function of the proportion of the population that is white.  
+## 5. Scatter Plots   
+Let's begin by taking a closer look at some of the scatter plots from earlier sections. For example, we looked at this plot in the "case rates by zip codes" section. The plot shows the positive test rate (positive tests/total tests) on the y-axis and the percent of the population tested (total tests/population). The purpose of this scatter plot was to try to understand by a positive test rate (positive tests/population) is different from a positive test rate (positive tests/total tests). The concern with using (positive tests/total tests) as an estimate for the positive case rate is that the number of tests that are performed in any given zip code might be related to the positive test rate itself (the theory is: if only a few tests are done, then the sickest people will be taking those tests and a higher proportion will be positive; meanwhile, if tests are widely available and anyone can get tested, then the proportion of tests that are positive will be lower). We examine this relationship again below:      
 ```{r scatter1, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$Total/zcta$Total_Pop*100, 
+     zcta$zcta_cum.perc_pos,
+     xlab = "percent of population tested",
+     ylab = "positive test rate",
+     main = "")
+```
+   
+We see that, up to a testing rate of about 2.5%, the positive test rate seems to increase with increased testing; however, it then starts to level out and even decrease with higher testing rates. We could see this pattern even more clearly by adding a sort of smoothing function to the plot. The red line roughly follows the "center" of the data, allowing us to see that increasing and decreasing trend more clearly:  
+```{r scatter_smooth1, exercise=TRUE, exercise.setup = 'load-data'}
+scatter.smooth(zcta$Total/zcta$Total_Pop*100, 
+               zcta$zcta_cum.perc_pos,
+               xlab = "percent of population tested",
+               ylab = "positive test rate",
+               main = "",
+               lpars = list(col = "red", lwd = 3))
+```
+  
+
+We now turn to a scatter plot from the "tables by race and income" section. In this plot, we saw an overall negative association between case rates and median income (by negative association, we mean that as one variable goes up, the other goes down; in this case, as median income increases, we expect the case rate to decrease). However, we saw that splitting the zip codes based on the proportion of the population that is white creates a sort of paradox: among the zip codes with the lowest proportion of white residents (the darkest blue dots in the plot), there is actually a positive association between median income and case rate (by that I mean: if you only look at the dark blue dots, then it would appear that higher median incomes are actually associated with higher case rates).   
+```{r scatter2, exercise=TRUE, exercise.setup = 'load-data'}
+dat <- zcta %>% 
+  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3))
+
+plot(dat$Med_Income, 
+     dat$Positive/dat$Total_Pop*100, 
+     col=dat$White_Prop_Lev+3,
+     xlab = "Median Income",
+     ylab = "Case Rate",
+     pch = 16)
+legend("topright",
+       col = c(4,5,6),
+       pch = 16,
+       legend = c("Low Prop White",
+                  "Med Prop White",
+                  "High Prop White"))
+```
+  
+Another way to think about this: if you drew a line through all the data, it would go from the top left to bottom right (we call this a "negative slope"); however, a line through those dark blue dots would now go from the lower left to upper right (a positive slope). Let's actually draw those lines on the plot (the black line is the "best-fit" line for all the data, while the blue line is the best fit for the blue dots only):  
+```{r scatter-smooth2, exercise=TRUE, exercise.setup = 'load-data'}
+dat <- zcta %>% 
+  select(White_Total, Race_Total, Med_Income, Positive, Total_Pop) %>% 
+  na.omit() %>%
+  mutate(White_Prop = round(White_Total/Race_Total, 3)*100) %>%
+  mutate(White_Prop_Lev = ntile(White_Prop, 3))
+
+plot(dat$Med_Income, 
+     dat$Positive/dat$Total_Pop*100, 
+     col=dat$White_Prop_Lev+3,
+     xlab = "Median Income",
+     ylab = "Case Rate",
+     pch = 16)
+
+abline(lm(I(Positive/Total_Pop*100)~Med_Income,
+          data = dat), 
+       lwd = 2)
+abline(lm(I(Positive/Total_Pop*100)~Med_Income,
+          data = dat, 
+          subset = (White_Prop_Lev == 1)),
+       lwd = 2, col = 4)
+
+legend("topright",
+       col = c(4,5,6),
+       pch = 16,
+       legend = c("Low Prop White",
+                  "Med Prop White",
+                  "High Prop White"))
+```  
+  
+Now that we've seen how scatter plots can be helpful visualizations when we want to better understand fine-grain relationships between variables, let's use some scatter plots to re-examine the relationship between the racial composition of a given zip code and the case rate. We saw in a previous section that there appears to be some relationship between the positive case rate and proportion of the population that identifies as white by zip code. We can visualize this relationship on a scatter plot by representing each zip code as a dot and plotting the positive case rate against the proportion of the population that is white. By adding a best fit line in blue, we can see a slight negative association between these variables.    
+```{r scatter3, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$White_Total/zcta$Total_Pop*100,
      round(zcta$Positive/zcta$Total_Pop*1000,1), 
      xlab="percent white", 
      ylab="pos cases per 1000 ppl", 
      pch=16)
+x <- zcta$White_Total/zcta$Total_Pop*100
+y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
+abline(lm(y~x), lwd = 3, col =4)
+```
+   
+We can repeat the same analysis looking at the proportion of the population that is black or hispanic. Data from NYC has shown that black and hispanic communities are experiencing higher rates of covid infection and mortality; therefore, we expect to see a positive association this time (and we do).  
+```{r scatter3_bh, exercise=TRUE, exercise.setup = 'load-data'}
+plot(zcta$NH_Black+zcta$Hisp,
+     round(zcta$Positive/zcta$Total_Pop*1000,1), 
+     xlab="percent black + hispanic", 
+     ylab="pos cases per 1000 ppl", 
+     pch=16)
+x <- zcta$NH_Black+zcta$Hisp
+y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
+abline(lm(y~x), lwd = 3, col =4)
 ```
   
-Next, we do the same for positive case rate vs. income:  
-```{r scatter2, exercise=TRUE, exercise.setup = 'load-data'}
+One possible mediator for these racial disparities is income. Some have speculated that differences in case rates by race could be "explained" by income inequality among different racial groups (i.e., communities with a higher proportion of black and hispanic residents may also be communities with lower median income, and it's possible that residents of lower income communities are more likely to get covid-19). To explore whether this is a possible explanation for the observed racial disparities, let's first look at the relationship between median income and case rate. We see (as expected) that there is a negative association between median income and case rates by zip code.    
+```{r scatter4, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$Med_Income,
      round(zcta$Positive/zcta$Total_Pop*1000,1), 
      xlab="median income", 
      ylab="pos cases per 1000 ppl", 
      pch=16)
+x <- zcta$Med_Income
+y <- round(zcta$Positive/zcta$Total_Pop*1000,1)
+abline(lm(y~x), lwd = 3, col =4)
 ```
   
-And finally, percent white vs. median income:  
-```{r scatter3, exercise=TRUE, exercise.setup = 'load-data'}
+Finally, we can look at the relationship between income and the racial composition of zip codes. For now, we'll look at the proportion of the population that is black or hispanic. This time, we see that zip codes with a higher median income tend to have a lower proportion of black and hispanic residents:  
+```{r scatter5, exercise=TRUE, exercise.setup = 'load-data'}
 plot(zcta$Med_Income,
-     zcta$White_Total/zcta$Total_Pop*100, 
+     zcta$NH_Black+zcta$Hisp, 
      xlab="median income", 
-     ylab="percent white", 
+     ylab="percent black + hispanic", 
      pch=16)
+x <- zcta$Med_Income
+y <- zcta$NH_Black+zcta$Hisp
+abline(lm(y~x), lwd = 3, col =4)
 ```  
    
+This all provides some evidence that income inequality may be mediating some of the racial disparities with regard to case rate.  
    
 ## 6. Mapping NYC    
 In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
