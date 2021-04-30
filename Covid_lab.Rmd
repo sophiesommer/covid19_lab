@@ -107,7 +107,7 @@ zcta <- zcta[!duplicated(zcta$MODZCTA),]
 ```
   
 ## The data: a summary 
-In this lab, you will inspect and interact with some datasets that have been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
+In this lab, you will inspect and interact with some datasets that have been compiled for you. The datasets loaded here were compiled using American Community Survey (ACS) census data, NYC COVID19 data (downloaded on April 23, 2020 from here: https://github.com/nychealth/coronavirus-data), and shape files for NYC zip codes (downloaded from here: https://data.cityofnewyork.us/widgets/i8iw-xf4u). You can see how all of these data were created, including how to add your own variables or change the regions, by reading the accompanying tutorials in more detail. The purpose of this lab is to give you a chance to run some code and play with some of the data, while bypassing the need to download and load everything on your own computer. There are three files loaded for you in this space:
 
 + zcta - data by zip code (zipcode tabulation area),
 + borough - data by borough
@@ -795,12 +795,12 @@ plot(zcta$Med_Income,
      pch=16)
 ```    
   
-### Code construct a map  
+### Code to construct a map  
 ```{r practice5, exercise=TRUE, exercise.setup = 'load-data2'}
 col_lev <- getShapeColors(round(zcta$Positive/zcta$Total_Pop*1000,1), 
                           5, 
                           "white", 
-                          rdgrbl = c(0,1,1),
+                          rdgrbl = c(0.3,0.1,0.4),
                           max_opac = 0.9)
 
 plot(NYC_zips, col = col_lev[[1]], 
