@@ -82,18 +82,18 @@ reducedZCTA <- zcta2 %>%
   transmute(White_Prop = round(White_Total/Race_Total*100, 1), 
             Cases_per_1000 = round(Positive/Total_Pop*1000, 2)) %>%
   na.omit()
-
-set.seed(333)
+# 
+# set.seed(333)
 simvals <- vector()
-for(i in 1:1000){
-  # reshuffle the proportion white
-  reducedZCTA$White_Prop <- sample(reducedZCTA$White_Prop)
-  # then recompute median split
-  simdata <- reducedZCTA %>% 
-    transmute(White_Prop_Lev = ntile(White_Prop, 2),
-              CaseRate_Lev = ntile(Cases_per_1000, 2)) 
-  simvals[i] <- table(simdata)[2,1]
-}
+# for(i in 1:1000){
+#   # reshuffle the proportion white-
+#   reducedZCTA$White_Prop <- sample(reducedZCTA$White_Prop)
+#   # then recompute median split
+#   simdata <- reducedZCTA %>% 
+#     transmute(White_Prop_Lev = ntile(White_Prop, 2),
+#               CaseRate_Lev = ntile(Cases_per_1000, 2)) 
+#   simvals[i] <- table(simdata)[2,1]
+# }
 
 knitr::opts_chunk$set(echo = FALSE)
 ```  
@@ -285,6 +285,15 @@ inc <- zcta %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2)) %>%
   na.omit()
 inc
+
+# inc2 <- zcta %>% 
+#   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
+#   group_by(Med_Inc_Lev) %>%
+#   summarise(Cases_per_1000 = round(mean(Total_Pop),2)) %>%
+#   na.omit()
+# inc2
+
+
 ```
   
 In the above examples of one-way tables, we take a single variable, such as proportion-white or median-income, and discretize that variable into levels. We then group the zipcodes (which are our data cases) by level, and display this COVID case-rate aggregated over the zipcodes in each level.
@@ -306,7 +315,7 @@ inc_propwhite <- zcta %>%
   mutate(Med_Inc_Lev = ntile(Med_Income, 3)) %>%
   group_by(White_Prop_Lev, Med_Inc_Lev) %>%
   summarise(Cases_per_1000 = round(sum(Positive)/sum(Total_Pop)*1000, 2)) %>%
-  spread(White_Prop_Lev, Cases_per_1000, fill=0)
+  tidyr::spread(White_Prop_Lev, Cases_per_1000, fill=0)
 
 inc_propwhite[,1] <- c("Low Income", "Med Income", "High Income")
 colnames(inc_propwhite) <- c("inc/race","Low Prop White", "Med Prop White", "High Prop White")
