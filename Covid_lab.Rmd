@@ -18,10 +18,10 @@ if(!require(dplyr)) {
 }
 library(dplyr)
 
-if(!require(rgdal)) {
-  install.packages("openintro")
+if(!require(sf)) {
+  install.packages("sf")
 }
-library(rgdal)
+library(sf)
 
 if(!require(viridis)) {
   install.packages("openintro")
@@ -40,7 +40,8 @@ library(tidyr)
 
 borough <- read.csv("data/data_summ_bor.csv")
 zcta <- read.csv("data/data_summ_zcta.csv")
-NYC_zips <- readOGR("Shape_Files/ZIP_CODE_040114.shp")
+NYC_zips <- st_read("Shape_Files/ZIP_CODE_040114.shp")
+NYC_zips <- NYC_zips$geometry
 
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
   if(length(nbreaks) == 1) {
@@ -448,7 +449,7 @@ propwhite2
   
    
 ## Mapping NYC    
-In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the readOGR function from the rgdal package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
+In order to create a map of NYC, with zip codes colored by a particular variable, one first needs to download a shape file. A zipcode level shape file has been loaded here for you and is called NYC_zips. For those who are interested, this was loaded with the st_read() function from the sf package. Next, to make the plot useful, it is possible to determine the color of each zip code on the map based on values of a particular variable. We have written a function to do this and have copied it below so you can inspect it. The function is loaded for you to use in subsequent activities.  
 ```{r map1, exercise=TRUE, exercise.setup = 'load-data2'}
 getShapeColors <- function(data, nbreaks=5, missingcol="gray88", rdgrbl=c(0,0,1), mycolors=NULL, max_opac=0.55){
   if(length(nbreaks) == 1) {
